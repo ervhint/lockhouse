@@ -21,7 +21,8 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 
 ## Commands
 
-None verified yet (the app is scaffolded in P3). Add `npm run dev` / `npm test` here once they work.
+- `npm run dev` — dev server on http://localhost:3000 (verified 23 Nov; P3 samples at `/samples`).
+- `npm test` — not set up yet (P6).
 
 ## Rules
 
@@ -32,7 +33,8 @@ None verified yet (the app is scaffolded in P3). Add `npm run dev` / `npm test` 
 - **Load the skills for the work** (list below). Naming a skill doesn't load it: call the Skill tool with its name before that work, in every chat. Plugin skills use their full name with the plugin prefix (e.g. `figma:figma-use-figjam`). Before saying a skill is missing, look on disk: `~/.claude/skills/<name>/SKILL.md` for own skills, `~/.claude/plugins/cache/` for plugin skills. A skill can be installed but left out of the skill list; if it's on disk, load it with the Skill tool or ask Laras to type `/<name>`. Only if it's not on disk, say so in one line and use the fallback.
 - **Commits.** Laras approves every commit and push: show files, message and branch, wait for a yes, stage only those files. Scan staged changes for secrets and keep the `gitleaks` pre-commit hook passing; never `--no-verify`. Commit as Laras's own git identity. Never add `Co-Authored-By` or "Generated with Claude Code" lines.
 - **Never:** secrets outside gitignored `.env*`; touch `hackathon\qorechain.txt`; mainnet or real funds; writes to Supabase Prod outside P7.
-- **Real names, not role words.** Every page, sample, mock, seed and test shows people by their own name (demo: Ayu, Tari, Ratna), never "Me", "Sister" or "Mom". Those words are only for talking about the demo. See docs/DESIGN.md "Names".
+- **Values are `{placeholders}`, never made up (Laras, 23 Nov, for P4 on).** In every page, mock and prototype, anything that changes per person, item or moment is written as a placeholder in curly braces: `Welcome, {username}`, `From {senderName} · Signature Checked`, `{readerCount} Readers`, `{date}`, `{qorAddress}`. Never invent a name, number, date or amount to fill a slot. Fixed text (labels, buttons, headings, sentences) is written out. Only true, fixed facts may appear as plain text (e.g. "ML-KEM-1024").
+- **General words in the writing; examples stay examples.** Landing and explainer text speaks in general ("your family", "the people you pick", "important papers"). Never turn the plan's examples into the copy: not "Ayu, Tari and Ratna" (example people), not "KK and KTP" (example papers) (Laras, 23 Nov). Where the app shows a person, the screen shows their name as a value (`{memberName}` in mocks; the real name at runtime), never a role word like "Me", "Sister" or "Mom". Ayu, Tari and Ratna are only the people in the demo recording and the test seeds. See docs/DESIGN.md "Names".
 - **Title Case** for UI labels (headings, buttons, nav, tabs, form labels, table headers, short statuses), written in the text, not with CSS. Sentences stay sentence case.
 - **Dev server:** reuse a running localhost; never stop or restart it without Laras's yes.
 
@@ -60,3 +62,13 @@ Local Markdown, no external tracker (build units live in `docs/PLAN.md` §4). Se
 ### Domain docs
 
 Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root, made only when needed. See `docs/agents/domain.md`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

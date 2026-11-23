@@ -51,6 +51,8 @@
 
 Demo people (made up, not Laras's family): **Ayu** (the house owner), **Tari** (her sister), **Ratna** (their mom). The Thief is not a person in the house; its window is labelled "Thief (Simulation)".
 
+**Update 23 Nov (P3, Laras):** the names are only examples. Writing on the landing page and explainer text stays general ("your family", "the people you pick"). Names appear only where the app shows an actual person.
+
 ## G2 answers (23 Nov, Laras)
 
 1. **The house:** one shared house. In the demo it's Ayu's house; Tari and Ratna are members. Anyone in the house can add someone. A person can make their own house too. For the build: one house per person is Must; a house picker (being in several houses) is Could.
@@ -61,3 +63,29 @@ Demo people (made up, not Laras's family): **Ayu** (the house owner), **Tari** (
 6. **The drill's old keys:** Laras left it to me. Only the drill's made-up sample KTP has an old-lock copy. Each family member's window has a "Give My Old Keys to the Drill (Simulation)" button, so the Thief can show those keys don't open Lockhouse copies.
 
 Added to the flow at G2: empty states, Sign Out / Forget Keys, and "I said no to signing" on S-04.
+
+## P3 samples (23 Nov, lockhouse-03)
+
+Ten references from Laras (`internal/design-references/design-references-01…10.txt`, private). Each one is a page on localhost: `/samples/01` … `/samples/10` (list at `/samples`). The samples live in `public/samples/` and `app/samples/` and are **gitignored** (Laras: never commit them). P4a deletes all but the picked one.
+
+**Same for every sample:** brand, copy and numbers swapped for Lockhouse (people by name: Ayu, Tari, Ratna; no made-up trust claims or partner logos). The references' **pictures and videos are kept** as they are (ship, solar house, city, bridge…), so each shows its real look; the picked one needs our own pictures in P4a. Labels are written in Title Case; where a reference shows labels in capitals (07, 08, 10 kickers, 04 eyebrow), the capitals stay as its style. Checked in Chrome at desktop width (the screen gives a 1366×577 view, not 1440×900) and at 375px in a phone frame.
+
+| # | Reference | Built | Changed / missing (everything else done) |
+| --- | --- | --- | --- |
+| 01 | Halden bowl-glow scroll | From spec | Nav button 166px wide (was 142) to fit "Make Your Keys"; partner wordmarks → the papers (KTP, Kartu Keluarga, Akta Lahir…); headline line break hidden on phones |
+| 02 | Lumen Roof fog toggle | Reference code, exact | Morning / Night → Today / After Q-Day |
+| 03 | Vela cycling word | From spec | Words Share / Sign / Lock / Open + "in Your House"; store buttons → Make Your Keys / Restore Keys (no app to install); stats → true facts (1,664 B per reader, 0 keys on our server, 3 readers); Inter Tight from Google Fonts, not self-hosted |
+| 04 | Facet glass shards | From spec | Pointer push ignores the tilt; the DOM text layer follows the whole panel, not each lifted shard; five terms → Padlock, Secret Words, The Gate, Signature, The Drill. Slow on weak phones |
+| 05 | halo glass prism | From spec | Glass shader written to the spec in GLSL, not a line-by-line port of vgpu's WGSL; no back-face bounce pass (port it if 05 is picked) |
+| 06 | Next Layer cinematic video | From spec | IpsumMark font not supplied → Manrope (the spec's fallback); logoipsum marks → QoreSeal, QoreSign, ML-KEM-1024, Diana Testnet |
+| 07 | NORVA night city scroll | From spec | Steps 01–04 = Make Your Keys, Register Your Padlock, Lock a Paper, Open It at Home |
+| 08 | Stratum stone house | Reference code, exact | Local files not supplied → videos and still from the CloudFront URLs (not re-encoded), Inter + Chakra Petch from Google Fonts (not subsets); STRATUM wordmark → LOCKHOUSE in Chakra Petch; chapters → The House, The Gate, The Readers, The Signature, The Drill, The Phone Book |
+| 09 | Cinematic liquid glass | From spec (React + Tailwind + Lucide) | Metadata row → ML-KEM-1024 + X25519, 3 Readers, Diana Testnet. Checked in Chrome after the reload-loop fix |
+| 10 | Mostar layered scroll | From spec | **Ogg Medium font missing**: its host blocks other sites (no CORS) and Ogg is a paid font → plain serif; sight cards → papers in Ayu's house |
+
+**Risks for the picked one (decide at G3):**
+- All pictures and videos sit on other people's CloudFront / figma.site accounts. A removed file breaks the demo, and the licence is unclear. The picked sample needs project copies or our own pictures.
+- 10's Ogg font is paid (Sharp Type). 08's videos are about 16 MB in total.
+- ~~Dev server reload loop~~ fixed 23 Nov: the project's setup now matches paypal-soul (see PROGRESS.md).
+
+**G3 pick (23 Nov, Laras): 02** (house in the fog, Today / After Q-Day switch). 10 is out. Laras: the 02 pictures are free to use. The 6 pictures are copied into `public/img/house/` (sky, ground and house cut-out, morning and night; 2.2 MB, from the images.higgs.ai URLs in the reference), and sample 02 now loads them from there. Font: Instrument Sans (Google Fonts, free licence).

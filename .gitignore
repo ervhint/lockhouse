@@ -6,3 +6,8 @@ internal/
 node_modules/
 .next/
 .vercel/
+next-env.d.ts
+*.tsbuildinfo
+# P3 design samples: never committed (Laras, 23 Nov)
+public/samples/
+app/samples/
