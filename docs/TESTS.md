@@ -12,12 +12,12 @@
 
 | ID | Covers | Type | Steps (short) | Expected | Result | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-0.1 | AC-0.1 | unit | `npm test` on a fresh checkout | suite runs and passes | ⏭ | |
-| T-0.2 | AC-0.2 | unit | seal one note to keys from test words 1 and 2; open with each; open with 3 | 1 and 2 get the note; 3 gets `NOT_A_RECIPIENT` | ⏭ | |
-| T-0.3 | AC-0.3 | unit | open a hybrid envelope with the right X25519 secret and a wrong ML-KEM-1024 secret | fails | ⏭ | |
+| T-0.1 | AC-0.1 | unit | `npm test` on a fresh checkout | suite runs and passes | ✅ | `npm test` 2/2 on 23 Nov |
+| T-0.2 | AC-0.2 | unit | seal one note to keys from test words 1 and 2; open with each; open with 3 | 1 and 2 get the note; 3 gets `NOT_A_RECIPIENT` | ✅ | tests/seal.test.ts |
+| T-0.3 | AC-0.3 | unit | open a hybrid envelope with the right X25519 secret and a wrong ML-KEM-1024 secret | fails | ✅ | tests/seal.test.ts |
 | T-0.4 | AC-0.4 | CI | push to `main` | one GitHub Actions job, green | ⏭ | |
-| T-0.5 | AC-0.5 | build check | `next build`, search `.next/static` for the secret names and values | nothing found | ⏭ | |
-| T-0.6 | AC-0.6 | hook check | stage a fake key, try to commit | gitleaks blocks it | ⏭ | |
+| T-0.5 | AC-0.5 | build check | `next build`, search `.next/static` for the secret names and values | nothing found | ✅ | `npm run check:build`: clean |
+| T-0.6 | AC-0.6 | hook check | stage a fake key, try to commit | gitleaks blocks it | ✅ | hook exit 1 on a fake AWS key (2 findings) |
 | T-1.1 | AC-1.1 | unit | derive twice from the same words | same address, signing key, QoreSeal keys | ⏭ | |
 | T-1.2 | AC-1.1, AC-1.2 | e2e | new profile → Make Your Keys → name → Make My Keys → backup | 24 words shown once, Continue off until ticked, no request carries the words | ⏭ | |
 | T-1.3 | AC-1.3 | e2e | reopen Welcome with keys kept | returning state with my name and the next step | ⏭ | |

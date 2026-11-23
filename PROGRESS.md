@@ -1,7 +1,7 @@
 # PROGRESS
 Hackathon: QoreChain Build Before Q-Day · Deadline: 2026-12-03 06:59 WIB (Laras's target: build done end of 2026-11-26) · Track: web3 (Diana testnet, no contract)
 Workflow: HACKATHON-WORKFLOW-V16.md (from 2026-11-23, end of lockhouse-03; same phases and gates as V15, plus rule 27: values are {placeholders}, examples never become copy)
-Phase: P5 done · Last gate passed: **G5** (23 Nov; Laras kept all four picks in PLAN §6) · Next: P6, **U0** in a new chat (Sonnet 5.5 · medium) · Waiting for user: no · P5 written on Opus 5.5 · high (Laras's choice)
+Phase: P6 Build, U0 ready for review · Last gate passed: **G5** (23 Nov; Laras kept all four picks in PLAN §6) · Next: P6, **U0** in a new chat (Sonnet 5.5 · medium) · Waiting for user: no · P5 written on Opus 5.5 · high (Laras's choice)
 Golden path: docs/PLAN.md §1.2 · Units: U0 → U1 → U2 → U3 → U4 → U5 → U6 → U7 (Coulds U8–U10 if time)     App: localhost until P7
 Accounts: GitHub https://github.com/ervhint/lockhouse (public, empty, created 2026-11-23) · Supabase org `ervhint` · Staging ref `egtxrdfhmtdiujdiywkm` · Prod ref `htghbmdautdpgzalysko` (untouched until P7) · Vercel team `ervhint`, project `lockhouse-qorechain` (created 2026-11-23, no deploy until P7)
 Could, if time allows: recovery key (Laras, 2026-11-23).
@@ -9,7 +9,7 @@ Laras (23 Nov): P2 starts in a new chat, after P1 is clear.
 
 | Build phase | Unit | Status | Tests | Notes |
 | --- | --- | --- | --- | --- |
-| A Setup | U0 skeleton, tests, architecture | todo | T-0.1–0.6 ⏭ | Sonnet 5.5 · medium · Laras funds 3 test accounts + adds GitHub secrets |
+| A Setup | U0 skeleton, tests, architecture | ready-for-review | T-0.1 ✅ T-0.2 ✅ T-0.3 ✅ T-0.5 ✅ T-0.6 ✅ T-0.4 ⏭ (needs push + secrets) | not committed yet · Laras: fund 3 test accounts, add Staging service role key to .env.local, add GitHub secrets |
 | B Keys, padlock, sign-in | U1 make/backup/restore/forget keys | todo | T-1.1–1.7 ⏭ | Opus 5.5 · medium |
 | B Keys, padlock, sign-in | U2 register padlock (testnet) | todo | T-2.1–2.8 ⏭ | Opus 5.5 · high |
 | B Keys, padlock, sign-in | U3 Sign In With QoreChain | todo | T-3.1–3.7 ⏭ | Opus 5.5 · high |
@@ -31,3 +31,5 @@ Fixed 23 Nov (Laras's yes): the dev server reloaded Next.js pages in a loop. Cau
 G3 pick (23 Nov): **02**; its 6 pictures copied to public/img/house/ (Laras: free to use), sample 02 uses them. Next action: P4 in a new chat (Sonnet 5.5 · medium): tokens from sample 02; delete the other samples, `app/samples/[id]/route.ts` and the `@source "./samples"` line in app/globals.css; components; every page with `{placeholders}` for values.
 Laras for P4 (23 Nov): (1) copy stays general, plan examples (Ayu/Tari/Ratna, KK/KTP) never become copy; (2) every changing value on a screen is a `{placeholder}` like `Welcome, {username}`, never a made-up name or number. Both in AGENTS.md rules. Laras briefly liked 09, then kept 02.
 Earlier (P1, 2026-11-23): P2 Stories + page flow in a new chat (Opus 5.5 · medium): git init + .gitignore + AGENTS.md/CLAUDE.md first (workflow §13), then the FigJam stories and page flow (settle the demo windows, PLAN §1.5). Project page (2026-11-23, done with Laras's yes): Apache-2.0 LICENSE committed and pushed (`7e52397`, main; gitleaks hook works, no leaks); repo linked on the project page (My space: "1 counted of 1" commits); QoreChain Build GitHub App installed on ervhint/lockhouse only (read-only); AI-Native ticked and Regional set to Indonesia (they had not been saved before). The site says AI-Native needs AI_USAGE.md in the repo (expected, add before the deadline). git is set up locally (remote origin, .gitignore, pre-commit hook); .gitignore, PROGRESS.md and docs/ are not committed yet.
+
+Done 2026-11-23 (U0): installed kits, cosmjs, bip39, supabase-js, vitest (@types/node bumped to 24 for vitest); lib/settings.ts; tests/seal.test.ts; scripts/test-accounts.mjs, scripts/check-build.mjs; .github/workflows/test.yml; .env.example; removed `@source "./samples"` from globals.css; architecture block in AGENTS.md. Test accounts made in .env.local (qor1w0c3th6k7gu3ptylnz6ngv2lskw6vaa29s60ha, qor17dpfdmax8fkvjl8w9ap6hhjmcuc9eldc02zgmh, qor1wyhu6v6r847t29l2ag3yef5r3e4fwxpw9pkntk), not yet funded. Next: Laras reviews U0, then U1 in a new chat (Opus 5.5 · medium).

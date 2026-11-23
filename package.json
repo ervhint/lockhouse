@@ -5,9 +5,19 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run",
+    "test:accounts": "node scripts/test-accounts.mjs",
+    "check:build": "node scripts/check-build.mjs"
   },
   "dependencies": {
+    "@cosmjs/amino": "^0.39.0",
+    "@cosmjs/proto-signing": "^0.39.0",
+    "@qorechain/qoreseal": "^0.1.0",
+    "@qorechain/qoresign": "^0.2.0",
+    "@scure/bip39": "^2.4.0",
+    "@supabase/supabase-js": "^2.119.2",
+    "cosmjs-types": "^0.11.0",
     "lucide-react": "^1.78.0",
     "next": "16.4.6",
     "react": "19.3.0",
@@ -15,10 +25,12 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^20",
+    "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^18.0.10",
     "tailwindcss": "4.3.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.1.1"
   }
 }

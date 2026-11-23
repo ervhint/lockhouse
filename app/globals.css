@@ -1,6 +1,4 @@
 @import "tailwindcss";
-/* P3 samples are gitignored, and Tailwind skips gitignored files. Remove this line when app/samples is deleted. */
-@source "./samples";
 
 /* Tokens from sample 02 (night house). */
 @theme {

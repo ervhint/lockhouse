@@ -22,7 +22,18 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 ## Commands
 
 - `npm run dev` — dev server on http://localhost:3000 (verified 23 Nov; P3 samples at `/samples`).
-- `npm test` — not set up yet (P6).
+- `npm test` — Vitest on localhost (unit + later integration against Staging and the testnet). Reads `.env.local`.
+- `npm run test:accounts` — makes `TEST_MNEMONIC_1..3`, `SESSION_SECRET` and `SUPABASE_URL` in `.env.local` if missing, prints the 3 qor1 addresses to fund at the faucet.
+- `npm run build && npm run check:build` — build, then check no server secret is in `.next/static` (T-0.5).
+- CI: `.github/workflows/test.yml`, one job on pushes to `main` (npm ci, test, build, check). Needs repo secrets named in `.env.example`.
+
+## Architecture (U0, details in docs/PLAN.md §3)
+
+- `lib/settings.ts` is the only place for chain id, REST, RPC, explorer, faucet and the item purpose. Testnet only; no env var can change it.
+- Browser: keys made from the 24 secret words (QoreSeal, QoreSign); words stay in localStorage. Server routes (`app/api/*`) only hold locked copies, signed cards and houses, through the Supabase service role key (RLS on, no policies).
+- Chain calls from the browser go through `/api/chain/[...path]` (fixed path list, U2). Routes and tables: PLAN §3.3 and §3.2.
+- Env vars (names in `.env.example`): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET` (server only, no `NEXT_PUBLIC_`), `TEST_MNEMONIC_1..3` (tests only).
+- Tests live in `tests/*.test.ts`. QoreSeal errors carry `.code` (e.g. `NOT_A_RECIPIENT`), not the code in the message.
 
 ## Rules
 
