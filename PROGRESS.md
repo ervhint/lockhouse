@@ -1,7 +1,7 @@
 # PROGRESS
 Hackathon: QoreChain Build Before Q-Day · Deadline: 2026-12-03 06:59 WIB (Laras's target: build done end of 2026-11-26) · Track: web3 (Diana testnet, no contract)
 Workflow: HACKATHON-WORKFLOW-V16.md (from 2026-11-23, end of lockhouse-03; same phases and gates as V15, plus rule 27: values are {placeholders}, examples never become copy)
-Phase: P4 done, rechecked in Chrome (23 Nov) · Last gate passed: **G4** (23 Nov) · Waiting for user: yes to commit P4, then P5 (Plan)
+Phase: P4 done, committed and pushed (5c0f751, 23 Nov) · Last gate passed: **G4** (23 Nov) · Next: P5 (Plan) in a new chat · Recommended model: **Opus 5.5, high effort**, for all of P5 (Laras's choice, 23 Nov: the plan needs to be very detailed)
 Golden path: docs/PLAN.md §1.2     App: localhost until P7
 Accounts: GitHub https://github.com/ervhint/lockhouse (public, empty, created 2026-11-23) · Supabase org `ervhint` · Staging ref `egtxrdfhmtdiujdiywkm` · Prod ref `htghbmdautdpgzalysko` (untouched until P7) · Vercel team `ervhint`, project `lockhouse-qorechain` (created 2026-11-23, no deploy until P7)
 Could, if time allows: recovery key (Laras, 2026-11-23).
