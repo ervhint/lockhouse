@@ -1,6 +1,6 @@
 # Lockhouse — agent instructions
 
-Lockhouse: a family house for papers, locked in the browser with QoreSeal (ML-KEM-1024 + X25519), padlocks registered on QoreChain's Diana testnet, family drop-ins signed with QoreSign. Built for QoreChain's Build Before Q-Day hackathon. Workflow: `HACKATHON-WORKFLOW-V15.md` (local only, not in the repo).
+Lockhouse: a family house for papers, locked in the browser with QoreSeal (ML-KEM-1024 + X25519), padlocks registered on QoreChain's Diana testnet, family drop-ins signed with QoreSign. Built for QoreChain's Build Before Q-Day hackathon. Workflow: `HACKATHON-WORKFLOW-V16.md` (local only, not in the repo).
 
 ## Docs
 
