@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { loadKeys } from "@/lib/keys";
 import Logo from "./Logo";
 import "./hero.css";
 
@@ -38,9 +39,12 @@ void main(){
 }`;
 
 // Welcome screen (S-01): sample 02, the Today / After Q-Day switch with the fog and the house.
-// `returning` = keys already in this browser.
-export default function Hero({ returning = false }: { returning?: boolean }) {
+// Returning = keys already in this browser (their name comes from there).
+export default function Hero() {
   const root = useRef<HTMLElement>(null);
+  const [name, setName] = useState<string>();
+  useEffect(() => setName(loadKeys()?.name), []);
+  const returning = name !== undefined;
 
   useEffect(() => {
     const el = root.current!;
@@ -136,7 +140,7 @@ export default function Hero({ returning = false }: { returning?: boolean }) {
           <Link className="logo" href="/" aria-label="Lockhouse"><Logo />Lockhouse</Link>
           <div className="side">
             <Link href="/sign-in">Sign In</Link>
-            <Link className="cta" href={returning ? "/house" : "/keys"}>{returning ? "Open My House" : "Make Your Keys"}</Link>
+            <Link className="cta" href={returning ? "/padlock" : "/keys"}>{returning ? "Continue" : "Make Your Keys"}</Link>
           </div>
         </header>
         <h1><span className="l1">Your Family Papers</span><span><i>Stay Locked</i> <span className="y nw">After Q-Day</span></span></h1>
@@ -147,8 +151,8 @@ export default function Hero({ returning = false }: { returning?: boolean }) {
           </div>
           <p className="cap">Keep your family&apos;s important papers in one house. Every copy is locked in your own browser <br />with <span className="nw">ML-KEM-1024</span>, so it stays shut even when the old locks break.</p>
           {returning
-            ? <p className="cap">Welcome back, {"{username}"}. Your keys are in this browser.</p>
-            : <p className="cap">Already have secret words? <Link href="/keys?state=restore" style={{ textDecoration: "underline" }}>Restore Your Keys</Link></p>}
+            ? <p className="cap">Welcome back, {name}. Your keys are in this browser. <Link href="/padlock" style={{ textDecoration: "underline" }}>Next: Register Your Padlock</Link></p>
+            : <p className="cap">Already have secret words? <Link href="/keys?restore" style={{ textDecoration: "underline" }}>Restore Your Keys</Link></p>}
         </div>
       </div>
     </main>

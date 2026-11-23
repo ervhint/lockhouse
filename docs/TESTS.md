@@ -18,13 +18,13 @@
 | T-0.4 | AC-0.4 | CI | push to `main` | one GitHub Actions job, green | ✅ | Actions run on d7883f8, 28 s |
 | T-0.5 | AC-0.5 | build check | `next build`, search `.next/static` for the secret names and values | nothing found | ✅ | `npm run check:build`: clean |
 | T-0.6 | AC-0.6 | hook check | stage a fake key, try to commit | gitleaks blocks it | ✅ | hook exit 1 on a fake AWS key (2 findings) |
-| T-1.1 | AC-1.1 | unit | derive twice from the same words | same address, signing key, QoreSeal keys | ⏭ | |
-| T-1.2 | AC-1.1, AC-1.2 | e2e | new profile → Make Your Keys → name → Make My Keys → backup | 24 words shown once, Continue off until ticked, no request carries the words | ⏭ | |
-| T-1.3 | AC-1.3 | e2e | reopen Welcome with keys kept | returning state with my name and the next step | ⏭ | |
-| T-1.4 | AC-1.4 | unit + e2e | restore test words 1 in a fresh profile | same qor1 address as the test account | ⏭ | |
-| T-1.5 | AC-1.5 | unit | restore with 23 words; with one word changed | inline error, nothing kept | ⏭ | |
-| T-1.6 | AC-1.6 | e2e | Make My Keys with an empty name | inline error | ⏭ | |
-| T-1.7 | AC-1.7 | e2e | menu → Forget Keys on This Device → confirm | words and name gone, signed out, Welcome first-visit | ⏭ | |
+| T-1.1 | AC-1.1 | unit | derive twice from the same words | same address, signing key, QoreSeal keys | ✅ | tests/keys.test.ts (23 Nov) |
+| T-1.2 | AC-1.1, AC-1.2 | e2e | new profile → Make Your Keys → name → Make My Keys → backup | 24 words shown once, Continue off until ticked, no request carries the words | ✅ | Chrome 23 Nov: 24 words match localStorage; Continue off until ticked; only page GETs, no body; reload shows "already shown" |
+| T-1.3 | AC-1.3 | e2e | reopen Welcome with keys kept | returning state with my name and the next step | ✅ | Chrome: "Welcome back, {name}" + Continue and "Next: Register Your Padlock" → /padlock (U2/U3 pick sign in / house later) |
+| T-1.4 | AC-1.4 | unit + e2e | restore test words 1 in a fresh profile | same qor1 address as the test account | ✅ | unit: test words 1 → qor1w0c3…s60ha (tests/keys.test.ts). e2e done in one profile with the public BIP-39 vector, not a 2nd profile |
+| T-1.5 | AC-1.5 | unit | restore with 23 words; with one word changed | inline error, nothing kept | ✅ | tests/keys.test.ts; Chrome: bad last word → inline error, localStorage empty |
+| T-1.6 | AC-1.6 | e2e | Make My Keys with an empty name | inline error | ✅ | Chrome: "Type your name.", focus on the field, nothing kept |
+| T-1.7 | AC-1.7 | e2e | menu → Forget Keys on This Device → confirm | words and name gone, signed out, Welcome first-visit | ✅ (part) | Chrome: words + name gone, Welcome first visit. "Signed out" waits for U3 |
 | T-2.1 | AC-2.1 | e2e | open Register Padlock with a new, unfunded account; then fund it; Check Again | Not Enough Test QOR + address + faucet link; then the start button | ⏭ | |
 | T-2.2 | AC-2.2 | e2e | Register My Padlock | Signature 1 of 2 explains itself; nothing sent before Approve (network tab) | ⏭ | |
 | T-2.3 | AC-2.3 | e2e | Not Now at step 1, then Try Again; same at step 2 | "You said no to signing. Nothing was sent."; back at the same step | ⏭ | |
@@ -93,9 +93,9 @@ Four profiles, all accounts set up first (keys, padlock, sign-in, house of three
 
 | Screen | States | Unit | Result |
 | --- | --- | --- | --- |
-| S-01 Welcome | first visit; keys already in this browser | U1 | ⏭ |
-| S-02 Make or Restore Keys | type your name; making; restore; wrong words | U1 | ⏭ |
-| S-03 Secret Words Backup | shown; confirm you saved them | U1 | ⏭ |
+| S-01 Welcome | first visit; keys already in this browser | U1 | ✅ 1366px + 375px (in a 375px frame; Chrome would not resize the window) |
+| S-02 Make or Restore Keys | type your name; making; restore; wrong words | U1 | ✅ 1366px + 375px (in a 375px frame; Chrome would not resize the window) |
+| S-03 Secret Words Backup | shown; confirm you saved them | U1 | ✅ 1366px + 375px (in a 375px frame; Chrome would not resize the window) |
 | S-04 Register Padlock | not enough test QOR; sign 1 of 2; sign 2 of 2; said no; pending; confirmed; failed | U2 | ⏭ |
 | S-05 House | loading; no other members; no papers; updating; Forget Keys sheet | U4, U5, U1 | ⏭ |
 | S-06 Add Member | checking card; no padlock; bad card; already in another house; added | U4 | ⏭ |

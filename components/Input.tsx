@@ -11,7 +11,7 @@ export default function Input({ label, hint, error, multiline, id, ...rest }: Pr
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={fid} className="text-sm font-medium">{label}</label>
-      {multiline ? <textarea rows={4} {...common} {...(rest as ComponentProps<"textarea">)} /> : <input {...common} {...(rest as ComponentProps<"input">)} />}
+      {multiline ? <textarea rows={4} {...common} className={`${cls} field-sizing-content min-h-28`} {...(rest as ComponentProps<"textarea">)} /> : <input {...common} {...(rest as ComponentProps<"input">)} />}
       {note && <p id={`${fid}-note`} className={`text-sm ${error ? "text-danger" : "text-muted"}`}>{note}</p>}
     </div>
   );

@@ -1,13 +1,6 @@
 import Hero from "@/components/Hero";
-import StatePicker from "@/components/StatePicker";
 
-// S-01 Welcome
-export default async function Welcome(props: PageProps<"/">) {
-  const { state } = await props.searchParams;
-  return (
-    <>
-      <Hero returning={state === "returning"} />
-      <StatePicker base="/" current={state as string} states={[["", "First Visit"], ["returning", "Keys Already in This Browser"]]} />
-    </>
-  );
+// S-01 Welcome. Hero picks first visit or returning from the keys in this browser.
+export default function Welcome() {
+  return <Hero />;
 }

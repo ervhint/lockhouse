@@ -15,7 +15,7 @@ export default async function SignIn(props: PageProps<"/sign-in">) {
         {state === "rejected" && <Badge tone="warn">You said no to signing. Nothing was sent.</Badge>}
         {state === "failed" && <Badge tone="bad">Sign-in failed. Try again.</Badge>}
         <Button href="/house" full loading={state === "signing"}>{state === "signing" ? "Signing" : state ? "Try Again" : "Sign In With My Key"}</Button>
-        <p className="text-center text-muted">No keys in this browser yet? <a href="/keys?state=restore" className="underline">Restore Your Keys</a></p>
+        <p className="text-center text-muted">No keys in this browser yet? <a href="/keys?restore" className="underline">Restore Your Keys</a></p>
       </Panel>
       <StatePicker base="/sign-in" current={state} states={[["", "Ready"], ["signing", "Signing"], ["rejected", "Rejected"], ["failed", "Failed"]]} />
     </AppShell>

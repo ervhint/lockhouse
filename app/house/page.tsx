@@ -11,6 +11,7 @@ import Skeleton from "@/components/Skeleton";
 import Sheet from "@/components/Sheet";
 import StatePicker from "@/components/StatePicker";
 import { members, items } from "@/lib/mock";
+import Forget from "./Forget";
 
 // S-05 House (members + items)
 export default async function House(props: PageProps<"/house">) {
@@ -67,7 +68,7 @@ export default async function House(props: PageProps<"/house">) {
         <Sheet title="Forget Keys on This Device?" closeHref="/house">
           <p className="mb-5 text-muted">Your keys are removed from this browser. To come back you need your secret words. Without them, your papers stay locked for good.</p>
           <div className="flex flex-col gap-2 sm:flex-row-reverse">
-            <Button variant="danger" href="/">Forget My Keys</Button>
+            <Forget />
             <Button variant="ghost" href="/house">Keep My Keys</Button>
           </div>
         </Sheet>
