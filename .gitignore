@@ -1,0 +1,8 @@
+HACKATHON-WORKFLOW-*
+DESIGN-REFERENCE-*
+internal/
+.env*
+!.env.example
+node_modules/
+.next/
+.vercel/
