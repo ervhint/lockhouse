@@ -1,20 +1,30 @@
 # PROGRESS
 Hackathon: QoreChain Build Before Q-Day · Deadline: 2026-12-03 06:59 WIB (Laras's target: build done end of 2026-11-26) · Track: web3 (Diana testnet, no contract)
 Workflow: HACKATHON-WORKFLOW-V16.md (from 2026-11-23, end of lockhouse-03; same phases and gates as V15, plus rule 27: values are {placeholders}, examples never become copy)
-Phase: P4 done, committed and pushed (5c0f751, 23 Nov) · Last gate passed: **G4** (23 Nov) · Next: P5 (Plan) in a new chat · Recommended model: **Opus 5.5, high effort**, for all of P5 (Laras's choice, 23 Nov: the plan needs to be very detailed)
-Golden path: docs/PLAN.md §1.2     App: localhost until P7
+Phase: P5 done · Last gate passed: **G5** (23 Nov; Laras kept all four picks in PLAN §6) · Next: P6, **U0** in a new chat (Sonnet 5.5 · medium) · Waiting for user: no · P5 written on Opus 5.5 · high (Laras's choice)
+Golden path: docs/PLAN.md §1.2 · Units: U0 → U1 → U2 → U3 → U4 → U5 → U6 → U7 (Coulds U8–U10 if time)     App: localhost until P7
 Accounts: GitHub https://github.com/ervhint/lockhouse (public, empty, created 2026-11-23) · Supabase org `ervhint` · Staging ref `egtxrdfhmtdiujdiywkm` · Prod ref `htghbmdautdpgzalysko` (untouched until P7) · Vercel team `ervhint`, project `lockhouse-qorechain` (created 2026-11-23, no deploy until P7)
 Could, if time allows: recovery key (Laras, 2026-11-23).
 Laras (23 Nov): P2 starts in a new chat, after P1 is clear.
 
 | Build phase | Unit | Status | Tests | Notes |
 | --- | --- | --- | --- | --- |
-| — | — | — | — | units come in P5 |
+| A Setup | U0 skeleton, tests, architecture | todo | T-0.1–0.6 ⏭ | Sonnet 5.5 · medium · Laras funds 3 test accounts + adds GitHub secrets |
+| B Keys, padlock, sign-in | U1 make/backup/restore/forget keys | todo | T-1.1–1.7 ⏭ | Opus 5.5 · medium |
+| B Keys, padlock, sign-in | U2 register padlock (testnet) | todo | T-2.1–2.8 ⏭ | Opus 5.5 · high |
+| B Keys, padlock, sign-in | U3 Sign In With QoreChain | todo | T-3.1–3.7 ⏭ | Opus 5.5 · high |
+| C The house | U4 members + Add Member | todo | T-4.1–4.9 ⏭ | Opus 5.5 · high |
+| D Put in and open | U5 gate + paper list | todo | T-5.1–5.8 ⏭ | Opus 5.5 · medium |
+| D Put in and open | U6 open + signature checked | todo | T-6.1–6.7 ⏭ | Sonnet 5.5 · medium |
+| E The drill | U7 Q-Day Drill (Simulation) | todo | T-7.1–7.7 ⏭ | Opus 5.5 · medium |
+| F Coulds | U8 fake drop-in · U9 remove member · U10 recovery key | todo | T-8.1, T-9.1, T-10.1 ⏭ | only if time allows |
 
 Done 2026-11-23: copied the four qorechain files into internal/ and HACKATHON-WORKFLOW-V14.md here; saved handoff §5–6 to memory; checked QoreSeal/QoreSign run in a browser (docs/PLAN.md §1.5); wrote docs/PLAN.md §1.
 Done 2026-11-23 (lockhouse-02): AGENTS.md + CLAUDE.md written (git, .gitignore and the gitleaks hook were already set up); FigJam board with 19 stories and the page flow; docs/DESIGN.md (stories table, 10 screens, states). `/setup-matt-pocock-skills` run by hand (it can only be started by Laras, so it was missed at first): local Markdown tracker, single-context glossary, no triage labels (triage skill not installed); docs/agents/ + "Agent skills" block in AGENTS.md.
 Committed and pushed 2026-11-23 (Laras's yes): .gitignore, PROGRESS.md, AGENTS.md, CLAUDE.md, docs/PLAN.md, docs/DESIGN.md, docs/agents/ ("Add P2 stories, page flow and project setup").
-Decisions: docs/PLAN.md §5 (from P5) · Design: docs/DESIGN.md (stories, screen inventory, FigJam https://www.figma.com/board/YJ3XAssAtb5I5KtXeFSX77)
+Done 2026-11-23 (P5): read both kits' type files (QoreSeal 0.1.0, QoreSign 0.2.0, unpacked in the scratchpad only, not installed) and their testnet examples on GitHub. Found: sign-in needs the padlock first; QoreSeal has no old-lock-only mode (the drill gets its own small old lock); transactions are built with cosmjs like the examples. Wrote docs/PLAN.md §2–6 (non-functional, data + routes, Web3 flows/permissions/invariants/tx states, units U0–U10 with acceptance criteria and test IDs, decisions D-01–D-15) and docs/TESTS.md. Test plan written in the main chat, not a subagent (D-15). Nothing committed yet.
+G5 passed 23 Nov (Laras: "ok then, you can commit and push"): plan committed and pushed. Next action: U0 in a new chat (Sonnet 5.5 · medium). Laras, during U0: fund the 3 test accounts at the faucet, add the GitHub Actions secrets.
+Decisions: docs/PLAN.md §5 · Design: docs/DESIGN.md (stories, screen inventory, FigJam https://www.figma.com/board/YJ3XAssAtb5I5KtXeFSX77)
 Blockers: none
 Done 2026-11-23 (lockhouse-03): Laras sent 10 references (internal/design-references, private) and asked for all 10 as samples. Next.js 16.4 app scaffolded in the repo root (Tailwind 4, lucide-react; no ESLint), `npm run dev` works. All 10 built at /samples/01–10 (list at /samples), copy swapped to Lockhouse, pictures kept; checked in Chrome at desktop and 375px except 09 (reload loop). Samples are gitignored (public/samples/, app/samples/) per Laras. Checklist + risks: docs/DESIGN.md "P3 samples". Opinion given at G3: 08 first, 02 second. `next dev` appended its own block to AGENTS.md (it re-adds it if removed). Nothing committed yet.
 Fixed 23 Nov (Laras's yes): the dev server reloaded Next.js pages in a loop. Cause: this project's setup differed from Laras's working OneDrive projects (paypal-soul, tideline-thesis). Fix: set up like paypal-soul (empty next.config.ts, Tailwind through postcss.config.mjs with @tailwindcss/postcss; removed cacheComponents, partialPrefetching and the @tailwindcss/turbopack loader). Checked: /samples/09 stays put. app/globals.css has `@source "./samples"` because Tailwind skips gitignored files; P4a removes it.

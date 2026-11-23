@@ -7,7 +7,7 @@ Lockhouse: a family house for papers, locked in the browser with QoreSeal (ML-KE
 - [PROGRESS.md](PROGRESS.md) — where we are; read it first.
 - [docs/PLAN.md](docs/PLAN.md) — golden path (§1), later build units, decisions log.
 - [docs/DESIGN.md](docs/DESIGN.md) — stories, page flow, screen inventory, design direction.
-- docs/TESTS.md — test plan (from P5).
+- [docs/TESTS.md](docs/TESTS.md) — test plan and results (IDs match the acceptance criteria in PLAN §4).
 - `internal/` — private notes, never committed (the idea, the facts, AI usage notes).
 
 ## Stack
