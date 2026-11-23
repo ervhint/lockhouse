@@ -89,3 +89,33 @@ Ten references from Laras (`internal/design-references/design-references-01…10
 - ~~Dev server reload loop~~ fixed 23 Nov: the project's setup now matches paypal-soul (see PROGRESS.md).
 
 **G3 pick (23 Nov, Laras): 02** (house in the fog, Today / After Q-Day switch). 10 is out. Laras: the 02 pictures are free to use. The 6 pictures are copied into `public/img/house/` (sky, ground and house cut-out, morning and night; 2.2 MB, from the images.higgs.ai URLs in the reference), and sample 02 now loads them from there. Font: Instrument Sans (Google Fonts, free licence).
+
+## P4 (24 Nov, lockhouse-04)
+
+**Tokens** (from sample 02, in `app/globals.css`): night `#0b1426`, slate `#1b2736`, mist `#eef1f6`, muted `#b4bfce`, lime `#e2ee9f` (primary action), amber `#e8a066` (warnings), danger `#f4a08e`. Font: Instrument Sans (400/500/600). Pills for buttons, 16px panels. Motion: only the Welcome fog and switch; app pages are calm; reduced-motion respected.
+
+**Routes:** `/` S-01 · `/keys` S-02 · `/keys/backup` S-03 · `/padlock` S-04 · `/house` S-05 · `/house/add` S-06 · `/put-in` S-07 · `/item/[id]` S-08 · `/drill` S-09 · `/sign-in` S-10. Every state in the inventory is reachable with `?state=…` (the "Prototype States" box bottom-left lists them). BFF mock: `GET /api/house` (data in `lib/mock.ts`, all `{placeholders}`).
+
+**Image list:** S-01 uses the 6 house pictures in `public/img/house/`. S-02 to S-10 use the night sky picture (blurred, dimmed) behind the header; no other pictures. Icons: lucide. Nothing missing.
+
+**Changes from sample 02:** the five dead nav links (How It Works, The Drill, Phone Book, Security, Docs) are dropped, since those pages do not exist; the nav keeps Sign In and Make Your Keys. Added a line under the caption: "Restore Your Keys" (first visit) or the returning-user line.
+
+**better-interface review (24 Nov, all 10 screens, desktop + 375px via iframes):** fixed: (1) House-type header was 440px wide at 375px, now wraps; (2) night picture was hidden behind the body (`isolate` added); (3) Welcome fog kept drifting under reduced motion, now one still frame; (4) Welcome text was 11px on short screens, now 13px minimum; (5) nav and sheet-close hit areas 36-39px, now 44px or more; (6) error toast is `role="alert"`; (7) secret-words field has autocomplete, capitals and spellcheck off; (8) three status sentences were Title Case, now sentence case; (9) headings `text-balance`, buttons press at 0.96 and name their transition properties.
+**Left open:** Sheet has no Esc key or focus trap, background not inert (P6, real `<dialog>`); error toast has no dismiss (P6, with real save errors); panel radius 16px vs rows 12px is not concentric (asks Laras, changes the approved look); no skip link (header is short). Not verified: screen reader, forced-colors, 200% zoom, the Welcome hero at 375px after the font change.
+
+**Not done yet:** P4b `design-critic` review (separate subagent). Other samples stay (Laras: leave them, they are gitignored).
+
+**P4b critic review (24 Nov, `design-critic`, 26 URLs):** FAIL on 2 blockers before fixes. Fixed: Sign In now shows on phones; "Q-Day" and "ML-KEM-1024" no longer break across lines; headline in Title Case; padlock "failed" shows which step failed and a way forward; idle steps are numbered, not empty circles; Drill has one primary button first and hides the start buttons after the result; Item has a Download action and the not-proven warning sits above a blurred preview; file picker styled; no double "Add Someone"; saved toast links to the House.
+**Still open (needs Laras):** (1) the brand font (Instrument Sans) is not applied: the running dev server sends `<html>` with no font class although `app/layout.tsx` has it; needs a dev-server restart (not done without Laras's yes). (2) In Today mode the Welcome headline sits on the roof on short screens; this is sample 02's exact look, so any change (picture move or a scrim) needs Laras's yes. Not verified: 1440px width, focus order, padlock Pending/Said-No states, house "updating".
+Recheck of the fixes in Chrome: not done yet.
+
+**Changes from chat qorechain-2026-04 (Laras checked them in the browser and is happy):**
+1. Text-field hints are plain words, not `{placeholders}` (V16 rule 27): `/keys` ("Type your secret words in order", "Your first name"), `/house/add` ("Paste their address, starting with qor1"), `/put-in` ("Write anything you want to keep private").
+2. Welcome readability (`components/hero.css`): new `--halo` token; the headline has a soft glow (cream by day, dark at night) and its top margin goes from 58u to 36u; "Stay Locked" is darker by day (42% to 72%); the caption is weight 500 with the same glow; `--soft` is stronger. This answers the open headline-on-roof item above.
+3. New logo, "the turning core": three rounded squares turned 0°, 22.5° and 45° around a dot, drawn in `currentColor` (`components/Logo.tsx`). New tab icon `app/icon.svg`. The old `app/favicon.ico` is still there; ask Laras before removing it. The brand colour (lime) may change later; nothing is decided.
+4. `components/Heading.tsx`: the intro paragraph runs the full width of the card on every inside page.
+5. `/put-in`: "Choose a File" and "Or Write a Note" are stacked, not side by side.
+
+**G4 passed (23 Nov, Laras):** every page checked and OK; Laras said `continue`. Recheck in Chrome (23 Nov): font now applied after a dev-server restart and a cleared `.next`; no sideways scroll at 375px on 16 route/state pages; Welcome headline is readable on the roof at 1366px. Old `app/favicon.ico` removed. Panel corners (16px) vs rows (12px): left as is, because the panel padding (20-24px) is bigger than its radius, so a perfectly nested corner would be about 0 and the difference is not visible. Sheet Esc/focus trap and toast dismiss stay for P6, when the real save and error flows exist.
+
+**Sheet and Toast finished in P4 (23 Nov, Laras asked):** Sheet closes with Esc, moves focus inside, keeps Tab inside and returns focus to the opener. Toast has a × button. Checked in Chrome. Still P6: make the background inert and use a real `<dialog>` if needed.

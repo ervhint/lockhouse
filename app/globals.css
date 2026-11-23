@@ -1,3 +1,27 @@
 @import "tailwindcss";
-/* P3 samples are gitignored, and Tailwind skips gitignored files. P4a removes this line. */
+/* P3 samples are gitignored, and Tailwind skips gitignored files. Remove this line when app/samples is deleted. */
 @source "./samples";
+
+/* Tokens from sample 02 (night house). */
+@theme {
+  --font-sans: var(--font-instrument), system-ui, sans-serif;
+  --color-night: #0b1426;
+  --color-ink: #14202f;
+  --color-slate: #1b2736;
+  --color-mist: #eef1f6;
+  --color-muted: #b4bfce;
+  --color-lime: #e2ee9f;
+  --color-lime-light: #f7f8dc;
+  --color-lime-deep: #6d8f2a;
+  --color-amber: #e8a066;
+  --color-danger: #f4a08e;
+  --radius-panel: 16px;
+}
+
+html, body { background: var(--color-night); color: var(--color-mist); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 2px solid var(--color-lime); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
