@@ -16,8 +16,8 @@ jobs:
       TEST_MNEMONIC_2: ${{ secrets.TEST_MNEMONIC_2 }}
       TEST_MNEMONIC_3: ${{ secrets.TEST_MNEMONIC_3 }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
