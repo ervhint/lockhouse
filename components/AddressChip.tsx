@@ -6,7 +6,7 @@ import { Check, Copy, ExternalLink } from "lucide-react";
 // with `copy` it is a button that copies the full value (so it can be shared, e.g. to be added to a house).
 export default function AddressChip({ address = "{qorAddress}", href, copy }: { address?: string; href?: string; copy?: boolean }) {
   const [copied, setCopied] = useState(false);
-  const cls = "inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 font-mono text-[13px] text-muted";
+  const cls = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-3 py-1 font-mono text-[13px] text-muted";
   const text = address.length > 20 ? `${address.slice(0, 10)}…${address.slice(-6)}` : address;
   if (href) return <a href={href} target="_blank" rel="noreferrer" title={address} className={`${cls} hover:bg-white/16`}>{text}<ExternalLink className="size-3" aria-label="Opens the explorer" /></a>;
   if (copy) return (

@@ -26,12 +26,20 @@ export async function houseIdOf(address: string): Promise<string | null> {
   return data?.house_id ?? null;
 }
 
-/** What the House screen needs (S-05): members in the order they joined; papers come in U5. Null if in no house. */
+/** What the House and Put In screens need (S-05, S-07): members in the order they joined, with the cards
+ *  that lock papers to them (cards are public); papers newest first, with no locked copy. Null if in no house. */
 export async function houseOf(address: string) {
   const id = await houseIdOf(address);
   if (!id) return null;
-  const { data, error } = await db().from("house_members").select("address, people!house_members_address_fkey(name)").eq("house_id", id).order("added_at");
-  if (error) throw error;
-  const members = (data as unknown as { address: string; people: { name: string } }[]).map((m) => ({ name: m.people.name, address: m.address }));
-  return { members, items: [] as { id: string; title: string; sender: string; date: string }[] };
+  const [m, i] = await Promise.all([
+    db().from("house_members").select("address, people!house_members_address_fkey(name, card)").eq("house_id", id).order("added_at"),
+    db().from("items").select("id, title, readers, created_at, people(name)").eq("house_id", id).order("created_at", { ascending: false }),
+  ]);
+  if (m.error) throw m.error;
+  if (i.error) throw i.error;
+  const members = (m.data as unknown as { address: string; people: { name: string; card: RecipientCard } }[])
+    .map((r) => ({ name: r.people.name, address: r.address, card: r.people.card }));
+  const items = (i.data as unknown as { id: string; title: string; readers: string[]; created_at: string; people: { name: string } }[])
+    .map((r) => ({ id: r.id, title: r.title, sender: r.people.name, date: r.created_at, readers: r.readers.length }));
+  return { id, members, items };
 }

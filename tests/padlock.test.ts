@@ -50,7 +50,7 @@ describe("on testnet", () => {
     expect(kem.algorithmId).toBe(2); // ML-KEM-1024
     expect(kem.publicKey).toEqual(keys.seal.mlkemPublicKey);
     expect(await chainStatus(keys, REST)).toMatchObject({ signingKey: true, padlock: true });
-    await expect(checkCard(signCard(keys), REST)).resolves.toBeUndefined();
+    await expect(checkCard(signCard(keys), REST)).resolves.toEqual({ mlkemPublicKey: keys.seal.mlkemPublicKey, x25519PublicKey: keys.seal.x25519PublicKey });
     // Another account's card doesn't check out as this one's.
     await expect(checkCard({ ...signCard(keys), x25519PublicKey: "00".repeat(32) }, REST)).rejects.toThrow();
   }, 180_000);

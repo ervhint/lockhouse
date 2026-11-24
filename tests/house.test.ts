@@ -60,6 +60,7 @@ const addMember = async (house: string, address: string, by: string) => {
 };
 afterAll(async () => {
   if (!made.length) return;
+  await db().from("items").delete().in("sender", made);
   await db().from("house_members").delete().in("address", made);
   await db().from("houses").delete().in("owner", made);
   await db().from("people").delete().in("address", made);
@@ -80,6 +81,13 @@ describe("add_member (Staging)", () => {
     expect(await houseOfRow(busy.address)).toBe(busy.house);
 
     expect(await addMember(owner.house, keysFrom(makeWords()).address, owner.address)).toBe("unknown");
+
+    // alone, but their house holds a paper: refused, nothing changed (U5)
+    const keeper = await fakePerson("Keeper");
+    const { error } = await db().from("items").insert({ id: randomUUID(), house_id: keeper.house, sender: keeper.address, title: "Paper", envelope: "qoreseal:x", signature: {}, readers: [keeper.address], size: 1 });
+    if (error) throw error;
+    expect(await addMember(owner.house, keeper.address, owner.address)).toBe("taken");
+    expect(await houseOfRow(keeper.address)).toBe(keeper.house);
   }, 60_000);
 });
 
@@ -123,7 +131,7 @@ describe.runIf(tari)("Add Member with a real card (testnet + Staging)", () => {
       expect(await houseOfRow(them)).toBe(owner.house);
       expect(await houseExists(spare!.id)).toBe(false);
       const theirView = await (await getHouse(them)).json();
-      expect(theirView.members).toEqual([{ name: "Owner", address: owner.address }, { name: "Tari", address: them }]);
+      expect(theirView.members).toMatchObject([{ name: "Owner", address: owner.address }, { name: "Tari", address: them }]);
     } finally {
       await db().from("house_members").update(before!).eq("address", them);
       await db().from("houses").delete().eq("id", spare!.id);

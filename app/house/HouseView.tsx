@@ -12,7 +12,7 @@ import EmptyState from "@/components/EmptyState";
 import Skeleton from "@/components/Skeleton";
 import { explorerAddress } from "@/lib/settings";
 
-type House = { members: { name: string; address: string }[]; items: { id: string; title: string; sender: string; date: string }[] };
+type House = { members: { name: string; address: string }[]; items: { id: string; title: string; sender: string; date: string; readers: number }[] };
 
 const PADLOCK = {
   wait: "Checking the Phone Book",
@@ -103,7 +103,7 @@ export default function HouseView() {
                   <li key={it.id}>
                     <Link href={`/item/${it.id}`} className="flex items-center gap-3 rounded-xl bg-white/6 px-4 py-3 hover:bg-white/12">
                       <FileText className="size-5 text-muted" aria-hidden />
-                      <span><span className="block font-medium">{it.title}</span><span className="block text-sm text-muted">Put in by {it.sender} · {it.date}</span></span>
+                      <span><span className="block font-medium">{it.title}</span><span className="block text-sm text-muted">Put in by {it.sender} · {new Date(it.date).toLocaleDateString(undefined, { dateStyle: "medium" })} · {it.readers} {it.readers === 1 ? "Reader" : "Readers"}</span></span>
                     </Link>
                   </li>
                 ))}
