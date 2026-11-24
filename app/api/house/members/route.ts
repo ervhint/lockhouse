@@ -31,3 +31,21 @@ export async function POST(req: NextRequest) {
   if (result !== "added") return refuse(SAID[result]);
   return Response.json({ member: { name: them.name, address } });
 }
+
+// Remove Someone (S-05 sheet, AC-9.1): any member can remove another member, not themselves.
+export async function DELETE(req: NextRequest) {
+  const me = unseal(SESSION, req.cookies.get(SESSION)?.value);
+  if (!me) return refuse("Sign in first.", 401);
+  const house = await houseIdOf(me);
+  if (!house) return refuse("You are not in a house.", 403);
+
+  const { address } = await req.json().catch(() => ({}));
+  if (typeof address !== "string" || !isAddress(address)) return refuse(NOT_ADDRESS);
+  const { data: them, error } = await db().from("people").select("name").eq("address", address).maybeSingle();
+  if (error) throw error;
+  const { data: result, error: failed } = await db().rpc("remove_member", { p_house: house, p_address: address, p_by: me });
+  if (failed) throw failed;
+  if (result === "self") return refuse("You can't remove yourself.");
+  if (result !== "removed") return refuse("They are not in your house. Nothing was changed.", 404);
+  return Response.json({ removed: { name: them!.name, address } });
+}

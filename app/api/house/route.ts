@@ -8,5 +8,5 @@ export async function GET(req: NextRequest) {
   if (!me) return Response.json({ error: "Sign in first." }, { status: 401 });
   const house = await houseOf(me);
   if (!house) return Response.json({ error: "You are not in a house." }, { status: 403 });
-  return Response.json(house);
+  return Response.json({ ...house, me });
 }

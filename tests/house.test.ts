@@ -8,7 +8,8 @@ import { CHAIN_ID } from "../lib/settings";
 import { db } from "../lib/db";
 import { NextRequest } from "next/server";
 import { GET as houseRoute } from "../app/api/house/route";
-import { POST as addRoute } from "../app/api/house/members/route";
+import { DELETE as removeRoute, POST as addRoute } from "../app/api/house/members/route";
+import { GET as itemRoute } from "../app/api/items/[id]/route";
 import { SESSION, seal } from "../lib/session";
 import { NOT_ADDRESS } from "../lib/keys";
 
@@ -20,6 +21,10 @@ const as = (address: string) => ({ cookie: `${SESSION}=${seal(SESSION, address, 
 const getHouse = (address: string) => houseRoute(new NextRequest(`${ORIGIN}/api/house`, { headers: as(address) }));
 const add = (by: string, address: string) =>
   addRoute(new NextRequest(`${ORIGIN}/api/house/members`, { method: "POST", headers: as(by), body: JSON.stringify({ address }) }));
+const remove = (by: string, address: string) =>
+  removeRoute(new NextRequest(`${ORIGIN}/api/house/members`, { method: "DELETE", headers: as(by), body: JSON.stringify({ address }) }));
+const getItem = (by: string, id: string) =>
+  itemRoute(new NextRequest(`${ORIGIN}/api/items/${id}`, { headers: as(by) }), { params: Promise.resolve({ id }) });
 
 describe("isAddress", () => {
   // T-4.7 text that isn't a qor1 address is caught before any request
@@ -110,6 +115,32 @@ describe("house routes (Staging)", () => {
     expect(none.status).toBe(400);
     expect(await none.json()).toEqual({ error: NO_PADLOCK });
     expect(await houseOfRow(nobody)).toBeUndefined();
+  }, 60_000);
+});
+
+describe("Remove Member (Staging)", () => {
+  // T-9.1 (server half) a member removes another: gone from the list, can't open the house or its papers,
+  // and has an empty house of their own. Can't remove yourself or someone outside the house.
+  it("removes someone from my house", async () => {
+    const [owner, mate] = [await fakePerson("Owner"), await fakePerson("Mate")];
+    expect(await addMember(owner.house, mate.address, owner.address)).toBe("added");
+    const paper = randomUUID();
+    const { error } = await db().from("items").insert({ id: paper, house_id: owner.house, sender: owner.address, title: "Paper", envelope: "qoreseal:x", signature: {}, readers: [owner.address, mate.address], size: 1 });
+    if (error) throw error;
+    expect((await getItem(mate.address, paper)).status).toBe(200);
+
+    expect((await remove(owner.address, owner.address)).status).toBe(400); // not yourself
+    expect((await remove(owner.address, keysFrom(makeWords()).address)).status).toBe(404); // not in my house
+    expect((await remove(owner.address, "hello")).status).toBe(400);
+
+    const res = await remove(owner.address, mate.address);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ removed: { name: "Mate", address: mate.address } });
+    expect((await (await getHouse(owner.address)).json()).members).toMatchObject([{ name: "Owner" }]);
+    const theirs = await (await getHouse(mate.address)).json();
+    expect(theirs.members).toMatchObject([{ name: "Mate", address: mate.address }]);
+    expect(theirs.items).toEqual([]);
+    expect((await getItem(mate.address, paper)).status).toBe(404);
   }, 60_000);
 });
 

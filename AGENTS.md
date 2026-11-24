@@ -63,7 +63,7 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 
 ## Shared components
 
-- Button · `components/Button.tsx` · the one button (primary/secondary/ghost/danger, `loading`, `href` makes it a link, `newTab` for other sites)
+- Button · `components/Button.tsx` · the one button (primary/secondary/ghost/danger, `loading`, `href` makes it a link, `newTab` for other sites; `aria-label` works on both)
 - Input · `components/Input.tsx` · text field, textarea (`multiline`) and file field with label, hint, error
 - Checkbox · `components/Checkbox.tsx` · checkbox row (reader picker, confirmations); `radio` makes it a radio row (File or Note on Put In)
 - Panel · `components/Panel.tsx` · the one card surface

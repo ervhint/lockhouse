@@ -16,6 +16,6 @@ export default function Button({ variant = "primary", loading, href, newTab, ful
   const off = disabled || loading;
   const cls = `inline-flex h-11 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-medium transition-[transform,background-color] active:scale-[0.96] ${variants[variant]} ${full ? "w-full" : ""} ${off ? "pointer-events-none opacity-50" : ""} ${className}`;
   const inner = <>{loading && <Loader2 className="size-4 animate-spin" aria-hidden />}{children}</>;
-  if (href && !off) return <Link href={href} className={cls} {...(newTab && { target: "_blank", rel: "noreferrer" })}>{inner}</Link>;
+  if (href && !off) return <Link href={href} className={cls} aria-label={rest["aria-label"]} {...(newTab && { target: "_blank", rel: "noreferrer" })}>{inner}</Link>;
   return <button type={type} className={cls} disabled={off} aria-busy={loading || undefined} {...rest}>{inner}</button>;
 }

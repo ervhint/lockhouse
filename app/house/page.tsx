@@ -6,14 +6,15 @@ import Sheet from "@/components/Sheet";
 import Forget from "./Forget";
 import HouseView from "./HouseView";
 
-// S-05 House (members + papers). `?forget` opens the Forget Keys sheet from the menu.
+// S-05 House (members + papers). `?forget` opens the Forget Keys sheet from the menu; `?remove={address}` the Remove sheet.
 export default async function House(props: PageProps<"/house">) {
   await signedIn(); // no session: off to Sign In (AC-3.5)
-  const forget = "forget" in (await props.searchParams);
+  const q = await props.searchParams;
+  const forget = "forget" in q;
   return (
     <AppShell>
       <Heading title="Your House">The people who can open papers here, and the papers they have put in.</Heading>
-      <HouseView />
+      <HouseView remove={typeof q.remove === "string" ? q.remove : undefined} />
       {forget && (
         <Sheet title="Forget Keys on This Device?" closeHref="/house">
           <p className="mb-5 text-muted">Your keys are removed from this browser. To come back you need your secret words. Without them, your papers stay locked for good.</p>

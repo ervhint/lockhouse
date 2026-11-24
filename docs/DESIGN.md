@@ -36,7 +36,7 @@
 | S-02 | Make or Restore Keys | US-01, US-02 | type your name; making; wrong words |
 | S-03 | Secret Words Backup (shown once) | US-01 | shown; confirm you saved them |
 | S-04 | Register Padlock | US-03, US-07 | not enough test QOR (faucet link); sign 1 of 2; sign 2 of 2; I said no to signing (nothing sent, try again); pending; confirmed; failed (explorer link, retry) |
-| S-05 | House (members + items) | US-05, US-06, US-11 | loading; no other members yet; no items yet; "list updating…"; menu: Sign Out, Forget Keys on This Device (asks first: words needed to come back) |
+| S-05 | House (members + items) | US-05, US-06, US-11, US-18 | loading; no other members yet; no items yet; "list updating…"; menu: Sign Out, Forget Keys on This Device (asks first: words needed to come back); Remove {memberName} sheet (`?remove={qorAddress}`: asks first, says what they opened stays on their device; removing, failed, removed toast) |
 | S-06 | Add Member | US-06 | checking card; no padlock in phone book; bad card; added |
 | S-07 | Gate (Put In) | US-08, US-09, US-10 | choose file or note; pick readers; too big; locking; signing; saved; save failed (nothing sent) |
 | S-08 | Item | US-12, US-13, US-17 | opening; opened + "Signature Checked"; not for you; signature not proven |

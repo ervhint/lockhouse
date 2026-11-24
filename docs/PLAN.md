@@ -157,7 +157,7 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 
 **Asset flows.** The only money that moves is test QOR for gas: each family account pays the network a small fee (about 0.04 test QOR per registration at 0.1 uqor per gas) for its own two registrations. Test QOR comes from the faucet (100 per 24 h). No contract, no transfers between people, no tokens. The Thief and the server hold no QOR.
 
-**Permissions.** No admin and no contract. The person who starts a house is its owner; any member can add someone (G2). Nobody can remove anyone yet (Could, U9). The server can't open any paper or forge a signature. It *could* hide or delete a locked copy, or refuse to store one; that is in the README limits.
+**Permissions.** No admin and no contract. The person who starts a house is its owner; any member can add someone (G2). Any member can remove another member, not themselves (U9); the removed person gets an empty house of their own. The server can't open any paper or forge a signature. It *could* hide or delete a locked copy, or refuse to store one; that is in the README limits.
 
 **Invariants (must always hold):**
 - INV-1: the server never receives secret words, an ML-KEM-1024 secret key, an ML-DSA-87 secret key, a file or a note. (Only the drill's X25519 key, on purpose.)
