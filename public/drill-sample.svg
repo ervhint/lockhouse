@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" font-family="system-ui, sans-serif">
+  <rect width="640" height="400" rx="24" fill="#f4efe6"/>
+  <rect x="0" y="0" width="640" height="72" rx="24" fill="#c9b79c"/>
+  <rect x="0" y="48" width="640" height="24" fill="#c9b79c"/>
+  <text x="32" y="46" font-size="24" font-weight="600" fill="#3b3226">Sample Family Paper</text>
+  <text x="608" y="46" font-size="16" fill="#3b3226" text-anchor="end">Made Up for the Drill</text>
+  <rect x="32" y="104" width="160" height="200" rx="12" fill="#ddd3c3"/>
+  <circle cx="112" cy="174" r="36" fill="#c9b79c"/>
+  <rect x="64" y="226" width="96" height="56" rx="28" fill="#c9b79c"/>
+  <g fill="#ddd3c3">
+    <rect x="224" y="112" width="280" height="18" rx="9"/>
+    <rect x="224" y="152" width="360" height="18" rx="9"/>
+    <rect x="224" y="192" width="220" height="18" rx="9"/>
+    <rect x="224" y="232" width="320" height="18" rx="9"/>
+    <rect x="224" y="272" width="180" height="18" rx="9"/>
+  </g>
+  <text x="32" y="360" font-size="18" font-weight="600" fill="#b0452f">SIMULATION · NOT A REAL PAPER</text>
+</svg>

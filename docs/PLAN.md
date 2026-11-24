@@ -146,8 +146,7 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 | `GET /api/auth/nonce` · `POST /api/auth/verify` · `POST /api/auth/sign-out` | anyone | Sign In With QoreChain (U3) |
 | `GET /api/house` · `POST /api/house/members` | house members | House, members, item list; add a member (U4, U5) |
 | `POST /api/items` · `GET /api/items/[id]` | house members | Put in; get one item for a reader (U5, U6) |
-| `GET /api/copies` | anyone | Every stored copy with no title, names or readers: the public store the Thief sees (U7) |
-| `GET /api/drill` · `POST /api/drill` | anyone · members | Old-lock copies and given old keys; give my old keys (U7) |
+| `GET /api/drill` · `POST /api/drill` | anyone · members | Every stored copy with no title, names or readers (`id, envelope`), plus the old-lock copies and given old keys; give my old keys (U7). One route instead of the planned `/api/copies` + `/api/drill`: the Drill needs both at once |
 
 ### 3.4 Env vars
 

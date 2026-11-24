@@ -79,7 +79,6 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 - UserMenu · `components/UserMenu.tsx` · signed-in menu: name from this browser, Sign Out, Forget Keys; no keys → Welcome (AC-3.7); exports `signOut()`
 - Logo · `components/Logo.tsx` · the sun-ray mark
 - Hero · `components/Hero.tsx` (+ `hero.css`) · Welcome screen from sample 02 (fog, Today / After Q-Day switch)
-- StatePicker · `components/StatePicker.tsx` · prototype-only `?state=` jumper; delete in P6
 
 ## Agent skills
 

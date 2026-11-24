@@ -23,7 +23,7 @@ export default function UserMenu() {
       <summary aria-label={name || "Your Menu"} className="flex min-w-16 cursor-pointer list-none items-center gap-1 rounded-full bg-white/10 px-3 py-3">{name}<ChevronDown className="size-4" aria-hidden /></summary>
       <div className="absolute right-0 z-10 mt-2 w-64 rounded-xl border border-white/20 bg-slate p-1">
         <button type="button" onClick={async () => { await signOut(); router.push("/"); router.refresh(); }} className="block w-full rounded-lg px-3 py-3 text-left hover:bg-white/10">Sign Out</button>
-        <Link href="/house?state=forget" className="block rounded-lg px-3 py-3 text-danger hover:bg-white/10">Forget Keys on This Device</Link>
+        <Link href="/house?forget" className="block rounded-lg px-3 py-3 text-danger hover:bg-white/10">Forget Keys on This Device</Link>
       </div>
     </details>
   );

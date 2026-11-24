@@ -64,13 +64,13 @@
 | T-6.5 | AC-6.5 | e2e | Download Paper | same file name and type as put in | ✅ | 24 Nov, Chrome: Download gave paper-test.png (name kept); type kept is covered by the unpack test |
 | T-6.6 | AC-6.6 | timed e2e | open 500 KB on the PC | Opening state; under 2 s | ✅ | 24 Nov, Chrome: 500 KB for 3 readers shown 1.7 s after page start (load included) |
 | T-6.7 | AC-6.7 | integration | a non-member session asks for the item | 403 | ✅ | 24 Nov, integration test |
-| T-7.1 | AC-7.1 | e2e golden | Thief profile opens the Drill | every stored copy listed, no titles or names; "Simulation" visible | ⏭ | |
-| T-7.2 | AC-7.2 | e2e + network check | Member A → Give My Old Keys to the Drill (Simulation) → confirm | request holds only the old-lock copy and the X25519 secret key | ⏭ | |
-| T-7.3 | AC-7.3 | e2e golden | Thief → Pretend Q-Day | old-lock copy opens and shows the drill sample; every Lockhouse copy stays shut with the reason | ⏭ | |
-| T-7.4 | AC-7.4 | e2e | Pretend Q-Day with no old keys given | the page says a family member must give them first | ⏭ | |
-| T-7.5 | AC-7.5 | e2e golden | after the drill, Member A opens the paper again | still opens | ⏭ | |
-| T-7.6 | AC-7.6 | unit | old lock: open with the right X25519 key; with another | opens; fails | ⏭ | |
-| T-7.7 | AC-7.7 | code search | search for `?state=` and `StatePicker` | none left | ⏭ | |
+| T-7.1 | AC-7.1 | e2e golden | Thief profile opens the Drill | every stored copy listed, no titles or names; "Simulation" visible | ✅ | 24 Nov: Chrome signed out (the Thief): no menu, no Give button, 3 drill samples + 2 locked copies, no titles or names, "Simulation" badge on the list; /api/drill without a cookie gives only `id, envelope` per copy |
+| T-7.2 | AC-7.2 | e2e + network check | Member A → Give My Old Keys to the Drill (Simulation) → confirm | request holds only the old-lock copy and the X25519 secret key | ✅ | 24 Nov, Chrome as Tari: the POST body held only `oldCopy` and `x25519Secret`; route test refuses an extra field, someone else's key, no session |
+| T-7.3 | AC-7.3 | e2e golden | Thief → Pretend Q-Day | old-lock copy opens and shows the drill sample; every Lockhouse copy stays shut with the reason | ✅ | 24 Nov, Chrome signed out with Ayu's, Tari's and Ratna's old keys given: all 3 samples opened, both papers stayed shut ("The ML-KEM-1024 part is missing"), even with the readers' real X25519 keys and public ML-KEM-1024 keys from the phone book; 1.1 s |
+| T-7.4 | AC-7.4 | e2e | Pretend Q-Day with no old keys given | the page says a family member must give them first | ✅ | 24 Nov, Chrome: "No old keys yet. A family member must give their old keys…" |
+| T-7.5 | AC-7.5 | e2e golden | after the drill, Member A opens the paper again | still opens | ✅ | 24 Nov, Chrome: after the drill Tari's note opened, Signature Checked |
+| T-7.6 | AC-7.6 | unit | old lock: open with the right X25519 key; with another | opens; fails | ✅ | tests/drill.test.ts |
+| T-7.7 | AC-7.7 | code search | search for `?state=` and `StatePicker` | none left | ✅ | 24 Nov: no `?state=` or StatePicker left (Forget Keys sheet is now `/house?forget`) |
 | T-8.1 | AC-8.1 | e2e (Could) | Try a Fake Drop-In (Simulation), then open it | Signature Not Proven | ⏭ | |
 | T-9.1 | AC-9.1 (Could) | e2e | remove Member B and confirm | gone from the list; can't open the house; the sheet states the limit | ⏭ | |
 | T-10.1 | AC-10.1 (Could) | integration + e2e | put in with a recovery key; open with the recovery words in a new profile | opens | ⏭ | |
@@ -86,8 +86,8 @@ Four profiles, all accounts set up first (keys, padlock, sign-in, house of three
 | 3 Member A opens it | T-6.1 | ⏭ |
 | 4 Member B opens the same lock | T-6.2 | ⏭ |
 | 5 Member B puts something in for the Owner | T-5.1 (one reader) + T-6.1 in the Owner's window | ⏭ |
-| 6 The drill | T-7.1, T-7.2, T-7.3 | ⏭ |
-| 7 Still fine | T-7.5 | ⏭ |
+| 6 The drill | T-7.1, T-7.2, T-7.3 | ✅ |
+| 7 Still fine | T-7.5 | ✅ |
 
 ## Page states (each unit checks its own, at 1440px and 375px)
 
