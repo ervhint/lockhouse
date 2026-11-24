@@ -77,7 +77,7 @@ export const signCard = (keys: Keys) =>
 /** Throws unless the card matches both keys the account has on chain (AC-2.7; U3 and U4 check it again). */
 export async function checkCard(card: RecipientCard, rest: string) {
   const [pq, mlkemPublicKey] = await Promise.all([fetchPqKeyStatus({ rest, address: card.address }), fetchMlkemPublicKey({ rest, address: card.address })]);
-  if (!pq.publicKey) throw new Error("This account has no signing key in the Phone Book yet.");
+  if (!pq.publicKey) throw Object.assign(new Error("This account has no signing key in the Phone Book yet."), { code: "PQ_KEY_NOT_REGISTERED" });
   verifyRecipientCard({ card, chainId: CHAIN_ID, pqPublicKey: pq.publicKey, mlkemPublicKey });
 }
 

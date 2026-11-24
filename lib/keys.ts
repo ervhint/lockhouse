@@ -1,7 +1,7 @@
 // Keys from the 24 secret words. Everything here runs in the browser; the words never leave it (INV-1).
 import { generateMnemonic, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
-import { deriveClassicalKey, addressFromPublicKey, deriveCanonicalPqKey } from "@qorechain/qoresign";
+import { deriveClassicalKey, addressFromPublicKey, deriveCanonicalPqKey, parseAddress } from "@qorechain/qoresign";
 import { deriveSealKeys } from "@qorechain/qoreseal";
 
 /** Everything the words give: the qor1 address, the classical and ML-DSA-87 signing keys, the QoreSeal keys. */
@@ -21,6 +21,13 @@ export const forgetKeys = () => localStorage.removeItem(SLOT);
 
 /** New words handed from S-02 to S-03 in memory only, so the backup screen shows them once (AC-1.2). */
 export const shown: { words: string | null } = { words: null };
+
+export const NOT_ADDRESS = "That is not a qor1 address. Check that it starts with qor1 and nothing is missing.";
+
+/** A qor1 account address with a good checksum (AC-4.7). The kit also takes 0x hex; we don't. */
+export function isAddress(text: string) {
+  try { return text.startsWith("qor1") && !!parseAddress(text); } catch { return false; }
+}
 
 /** 24 new secret words (256 bits). */
 export const makeWords = () => generateMnemonic(wordlist, 256);

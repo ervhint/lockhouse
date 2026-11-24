@@ -1,9 +1,12 @@
 import type { NextRequest } from "next/server";
-import { house } from "@/lib/mock";
+import { houseOf } from "@/lib/house";
 import { SESSION, unseal } from "@/lib/session";
 
-// BFF route for the House screen (S-05). Members only (AC-3.5). Mock data until U4 reads Supabase here.
+// The House screen's data (S-05): the house you are in. Members only (AC-3.5, AC-4.8).
 export async function GET(req: NextRequest) {
-  if (!unseal(SESSION, req.cookies.get(SESSION)?.value)) return new Response("Sign in first", { status: 401 });
+  const me = unseal(SESSION, req.cookies.get(SESSION)?.value);
+  if (!me) return Response.json({ error: "Sign in first." }, { status: 401 });
+  const house = await houseOf(me);
+  if (!house) return Response.json({ error: "You are not in a house." }, { status: 403 });
   return Response.json(house);
 }

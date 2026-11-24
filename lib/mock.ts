@@ -13,5 +13,3 @@ export const items = Array.from({ length: 3 }, (_, i) => ({
   date: "{date}",
   readers: "{readerCount}",
 }));
-
-export const house = { members, items };
