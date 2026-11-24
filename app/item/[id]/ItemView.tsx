@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, FileText, Lock } from "lucide-react";
+import { Download, FileText, Lock, ShieldAlert } from "lucide-react";
 import Heading from "@/components/Heading";
 import Panel from "@/components/Panel";
 import Button from "@/components/Button";
@@ -12,7 +12,7 @@ import type { MessageSignature } from "@qorechain/qoresign";
 import { keysFrom, loadKeys } from "@/lib/keys";
 import { openItem, type Paper } from "@/lib/items";
 
-type Row = { id: string; house_id: string; sender: string; senderName: string; title: string; created_at: string; readerCount: number; reader: boolean; envelope?: string; signature?: MessageSignature };
+type Row = { id: string; house_id: string; sender: string; senderName: string; title: string; created_at: string; readerCount: number; reader: boolean; fromMe: boolean; envelope?: string; signature?: MessageSignature };
 type View = { row: Row; proven: boolean; paper: Paper | null };
 
 const when = (d: string) => new Date(d).toLocaleDateString(undefined, { dateStyle: "medium" });
@@ -57,7 +57,7 @@ export default function ItemView({ id }: { id: string }) {
 
   const back = <Button variant="secondary" href="/house">Back to the House</Button>;
 
-  if (problem === "gone") return <EmptyState icon={Lock} title="This Paper Isn't Here" text="It isn't in your house, or it was never put in. Go back and pick one from the list." action={back} />;
+  if (problem === "gone") return <EmptyState page icon={Lock} title="This Paper Isn't Here" text="It isn't in your house, or it was never put in. Go back and pick one from the list." action={back} />;
   if (problem) return (
     <Panel className="flex flex-col items-start gap-4">
       <p role="alert">{problem === "keys" ? "This browser has no keys, so it can't open papers. Restore your keys with your secret words first."
@@ -74,7 +74,8 @@ export default function ItemView({ id }: { id: string }) {
   );
 
   const { row, proven, paper } = view;
-  if (!row.reader) return <EmptyState icon={Lock} title="This Paper Is Not for You" text={`You are not one of this paper's readers. Ask ${row.senderName} to add you.`} action={back} />;
+  if (!row.reader && row.fromMe) return <EmptyState page warn icon={ShieldAlert} title="You Did Not Put This In" text="This paper says it is from you, but you are not one of its readers, and you can open everything you put in. Someone used your name. Do not trust it." action={back} />;
+  if (!row.reader) return <EmptyState page icon={Lock} title="This Paper Is Not for You" text={`You are not one of this paper's readers. Ask ${row.senderName} to add you.`} action={back} />;
 
   const save = () => {
     const a = document.createElement("a");

@@ -40,7 +40,7 @@
 | S-06 | Add Member | US-06 | checking card; no padlock in phone book; bad card; added |
 | S-07 | Gate (Put In) | US-08, US-09, US-10 | choose file or note; pick readers; too big; locking; signing; saved; save failed (nothing sent) |
 | S-08 | Item | US-12, US-13, US-17 | opening; opened + "Signature Checked"; not for you; signature not proven |
-| S-09 | Drill (Simulation) | US-14, US-15 | all stored copies listed; Pretend Q-Day running; result |
+| S-09 | Drill (Simulation) | US-14, US-15, US-17 | all stored copies listed; Pretend Q-Day running; result; A Fake Drop-In (members): making the fake paper, failed (no one else in the house, no connection), then S-08 shows Signature Not Proven |
 | S-10 | Sign In With QoreChain | US-04 | signing; rejected; failed |
 
 **Web3 states covered** (workflow, Web3 track): no wallet connect (keys live in the page, not in QoreX), so "connect" is replaced by make/restore keys and sign-in. Wrong network → the app only talks to `qorechain-diana`. Signature request → S-04 says what each of the two signatures does. Insufficient funds → S-04 faucet branch. Submitted → pending → confirmed / failed with explorer link → S-04. Stale data → S-05 "list updating…".

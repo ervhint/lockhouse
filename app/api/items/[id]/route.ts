@@ -21,5 +21,6 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/items/[id]">
 
   const { envelope, signature, readers, people, ...rest } = data as typeof data & { people: { name: string } };
   const reader = readers.includes(me);
-  return Response.json({ ...rest, senderName: people.name, readerCount: readers.length, reader, ...(reader && { envelope, signature }) });
+  // fromMe: a sender is always a reader (D-14), so "from me but not for me" can only be a fake (AC-8.1)
+  return Response.json({ ...rest, senderName: people.name, readerCount: readers.length, reader, fromMe: data.sender === me, ...(reader && { envelope, signature }) });
 }

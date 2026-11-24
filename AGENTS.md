@@ -72,7 +72,7 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 - AddressChip · `components/AddressChip.tsx` · short qor1 address or tx hash (long values cut to start…end), optional explorer link (`href`) or copy button (`copy`)
 - Sheet · `components/Sheet.tsx` · the one modal (closes by link or Esc; focus moves in and Tab stays inside)
 - Toast · `components/Toast.tsx` · the one toast (× closes it)
-- EmptyState · `components/EmptyState.tsx` · icon, title, text, action
+- EmptyState · `components/EmptyState.tsx` · icon, title, text, action; `page` (it is the whole page) puts it on the Panel card with an h1 title, `warn` a red icon
 - Skeleton · `components/Skeleton.tsx` · loading placeholder
 - Heading · `components/Heading.tsx` · page title + one sentence
 - AppShell · `components/AppShell.tsx` · header, night background; `signedIn` shows the nav + UserMenu

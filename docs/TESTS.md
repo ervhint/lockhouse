@@ -71,7 +71,7 @@
 | T-7.5 | AC-7.5 | e2e golden | after the drill, Member A opens the paper again | still opens | ✅ | 24 Nov, Chrome: after the drill Tari's note opened, Signature Checked |
 | T-7.6 | AC-7.6 | unit | old lock: open with the right X25519 key; with another | opens; fails | ✅ | tests/drill.test.ts |
 | T-7.7 | AC-7.7 | code search | search for `?state=` and `StatePicker` | none left | ✅ | 24 Nov: no `?state=` or StatePicker left (Forget Keys sheet is now `/house?forget`) |
-| T-8.1 | AC-8.1 | e2e (Could) | Try a Fake Drop-In (Simulation), then open it | Signature Not Proven | ⏭ | |
+| T-8.1 | AC-8.1 | e2e (Could) | Try a Fake Drop-In (Simulation), then open it | Signature Not Proven | ✅ | 24 Nov. Route tests in tests/drill.test.ts: 401 signed out; the paper claims another member, opens for me, `proven` false; the claimed member gets `fromMe` and no envelope; alone in a house → 400 with a next step, nothing stored. Chrome as Tari: pressed the button, landed on the paper "Put in by Ayu" with Signature Not Proven, blurred preview, no Download. Drill panel fits at 320px. Failed states seen (alone, no connection; focus stays on the button). As Ayu: "You Did Not Put This In". Full better-interface review, see PROGRESS |
 | T-9.1 | AC-9.1 (Could) | e2e | remove Member B and confirm | gone from the list; can't open the house; the sheet states the limit | ⏭ | |
 | T-10.1 | AC-10.1 (Could) | integration + e2e | put in with a recovery key; open with the recovery words in a new profile | opens | ⏭ | |
 

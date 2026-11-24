@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FileText, KeyRound, Lock, LockOpen } from "lucide-react";
 import { fetchMlkemPublicKey } from "@qorechain/qoreseal/network";
@@ -20,6 +21,10 @@ export default function DrillView({ member }: { member: boolean }) {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const summary = useRef<HTMLHeadingElement>(null);
+  const router = useRouter();
+  const [faking, setFaking] = useState(false);
+  const [fakeProblem, setFakeProblem] = useState<string | null>(null);
+  const fakeButton = useRef<HTMLButtonElement>(null);
 
   const load = useCallback(async () => {
     setProblem(null);
@@ -29,6 +34,7 @@ export default function DrillView({ member }: { member: boolean }) {
   }, []);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (result) summary.current?.focus(); }, [result]);
+  useEffect(() => { if (fakeProblem) fakeButton.current?.focus(); }, [fakeProblem]); // the button was off while working, so focus fell away
   useEffect(() => () => result?.pictures.forEach(URL.revokeObjectURL), [result]);
 
   const run = async () => {
@@ -46,6 +52,17 @@ export default function DrillView({ member }: { member: boolean }) {
       setProblem("Can't reach QoreChain's phone book. Nothing was tried. Try again.");
     }
     setRunning(false);
+  };
+
+  // AC-8.1: the server plays a hacked server and slips in a paper with a wrong signature; open it to see it refused.
+  const fake = async () => {
+    setFaking(true);
+    setFakeProblem(null);
+    const res = await fetch("/api/drill/fake", { method: "POST" }).catch(() => null);
+    if (res?.status === 401) return router.push("/sign-in");
+    if (res?.ok) return router.push(`/item/${(await res.json()).id}`);
+    setFakeProblem((res && (await res.json().catch(() => null))?.error) || "The fake paper was not made. Check your connection, then try again.");
+    setFaking(false);
   };
 
   if (!store) return (
@@ -100,6 +117,18 @@ export default function DrillView({ member }: { member: boolean }) {
             <p className="text-muted">Your own papers still open for you, with your own keys.</p>
             <Button href="/house" full>Open My Papers</Button>
           </>}
+        </Panel>
+      )}
+
+      {member && (
+        <Panel className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-medium">A Fake Drop-In</h2>
+            <Badge tone="warn">Simulation</Badge>
+          </div>
+          <p className="text-muted">Pretend our server was hacked. It slips a paper into your house that says it is from someone else in it, but it can&apos;t sign with their key. Only you can open it.</p>
+          {fakeProblem && <p role="alert" className="text-danger">{fakeProblem}</p>}
+          <Button ref={fakeButton} variant="secondary" onClick={fake} loading={faking}>{faking ? "Making the Fake Paper" : "Try a Fake Drop-In (Simulation)"}</Button>
         </Panel>
       )}
     </div>
