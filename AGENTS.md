@@ -62,13 +62,13 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 
 ## Shared components
 
-- Button · `components/Button.tsx` · the one button (primary/secondary/ghost/danger, `loading`, `href` makes it a link)
+- Button · `components/Button.tsx` · the one button (primary/secondary/ghost/danger, `loading`, `href` makes it a link, `newTab` for other sites)
 - Input · `components/Input.tsx` · text field, textarea (`multiline`) and file field with label, hint, error
 - Checkbox · `components/Checkbox.tsx` · checkbox row (reader picker, confirmations)
 - Panel · `components/Panel.tsx` · the one card surface
 - Badge · `components/Badge.tsx` · status pill (ok/warn/bad/wait, each with an icon)
 - TxPill · `components/TxPill.tsx` · transaction status (waiting/pending/confirmed/failed), built on Badge
-- AddressChip · `components/AddressChip.tsx` · short qor1 address, optional explorer link
+- AddressChip · `components/AddressChip.tsx` · short qor1 address or tx hash (long values cut to start…end), optional explorer link
 - Sheet · `components/Sheet.tsx` · the one modal (closes by link or Esc; focus moves in and Tab stays inside)
 - Toast · `components/Toast.tsx` · the one toast (× closes it)
 - EmptyState · `components/EmptyState.tsx` · icon, title, text, action

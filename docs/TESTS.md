@@ -25,14 +25,14 @@
 | T-1.5 | AC-1.5 | unit | restore with 23 words; with one word changed | inline error, nothing kept | ✅ | tests/keys.test.ts; Chrome: bad last word → inline error, localStorage empty |
 | T-1.6 | AC-1.6 | e2e | Make My Keys with an empty name | inline error | ✅ | Chrome: "Type your name.", focus on the field, nothing kept |
 | T-1.7 | AC-1.7 | e2e | menu → Forget Keys on This Device → confirm | words and name gone, signed out, Welcome first-visit | ✅ (part) | Chrome: words + name gone, Welcome first visit. "Signed out" waits for U3 |
-| T-2.1 | AC-2.1 | e2e | open Register Padlock with a new, unfunded account; then fund it; Check Again | Not Enough Test QOR + address + faucet link; then the start button | ⏭ | |
-| T-2.2 | AC-2.2 | e2e | Register My Padlock | Signature 1 of 2 explains itself; nothing sent before Approve (network tab) | ⏭ | |
-| T-2.3 | AC-2.3 | e2e | Not Now at step 1, then Try Again; same at step 2 | "You said no to signing. Nothing was sent."; back at the same step | ⏭ | |
-| T-2.4 | AC-2.4 | integration + e2e | approve both on a funded test account | Pending → Confirmed with explorer links; chain shows signing key (proof: yes) and ML-KEM-1024 padlock | ⏭ | |
-| T-2.5 | AC-2.5 | e2e | reload after step 1; reload after both | starts at step 2; then Confirmed + Continue | ⏭ | |
-| T-2.6 | AC-2.6 | unit + e2e | map refusal codes 250–254 to text; force a refusal | Failed names the step, plain reason, Try Again skips finished steps | ⏭ | |
-| T-2.7 | AC-2.7 | integration | sign the card for a registered test account, check it against the chain | `verifyRecipientCard` passes | ⏭ | |
-| T-2.8 | AC-2.8 | unit | `/api/chain` with an unlisted path; with a full URL to another host | 404, nothing forwarded | ⏭ | |
+| T-2.1 | AC-2.1 | e2e | open Register Padlock with a new, unfunded account; then fund it; Check Again | Not Enough Test QOR + address + faucet link; then the start button | ✅ (part) | Chrome 23 Nov, new unfunded keys: Not Enough Test QOR, "0 test QOR", full address + Copy, faucet link (dashboard.qorechain.io/faucet, new tab), Check Again re-reads via /api/chain (3 GETs). Funding a fresh account not run (faucet needs Laras's sign-in) |
+| T-2.2 | AC-2.2 | e2e | Register My Padlock | Signature 1 of 2 explains itself; nothing sent before Approve (network tab) | ✅ | Chrome 24 Nov, test account 2 ("Tari"): Signature 1 of 2 shows what it signs; no /api/chain request until Approve; focus lands on Approve |
+| T-2.3 | AC-2.3 | e2e | Not Now at step 1, then Try Again; same at step 2 | "You said no to signing. Nothing was sent."; back at the same step | ✅ | Chrome: Not Now at step 1 and at step 2 → "You said no to signing. Nothing was sent.", no request; Try Again (keyboard) → same step |
+| T-2.4 | AC-2.4 | integration + e2e | approve both on a funded test account | Pending → Confirmed with explorer links; chain shows signing key (proof: yes) and ML-KEM-1024 padlock | ✅ | integration: test account 1 (tx 2DF49CA2…9776, 5F6B0560…1193). e2e: test account 2 in Chrome, Pending with tx link → Confirmed: tx 4D2640D0…FBF9 (signing key), 60DA5F5C…FC8B (padlock), both code 0; chain: hybrid, possession_proven true, mlkem1024 at height 10639823 |
+| T-2.5 | AC-2.5 | e2e | reload after step 1; reload after both | starts at step 2; then Confirmed + Continue | ✅ | Chrome: reload after step 1 → step 1 ✓, Register goes to Signature 2 of 2; reload after both → Confirmed ×2, card checked, Continue → /sign-in |
+| T-2.6 | AC-2.6 | unit + e2e | map refusal codes 250–254 to text; force a refusal | Failed names the step, plain reason, Try Again skips finished steps | ✅ (unit) · e2e ⏭ | tests/padlock.test.ts: codes 250–254, simulation refusal, insufficient funds, network down. A real refusal was not forced in Chrome |
+| T-2.7 | AC-2.7 | integration | sign the card for a registered test account, check it against the chain | `verifyRecipientCard` passes | ✅ | tests/padlock.test.ts: signCard → checkCard passes against the chain; a changed X25519 key is refused |
+| T-2.8 | AC-2.8 | unit | `/api/chain` with an unlisted path; with a full URL to another host | 404, nothing forwarded | ✅ | tests/chain-route.test.ts: 4 unlisted paths/other host → 404, fetch never called; a listed path goes to api-testnet.qore.host only |
 | T-3.1 | AC-3.1 | e2e golden + integration | Sign In With My Key | lands on the House; cookie is httpOnly, SameSite=Lax, 7 days | ⏭ | |
 | T-3.2 | AC-3.2 | integration | first sign-in of a test account | people row with name + checked card; a house with one member | ⏭ | |
 | T-3.3 | AC-3.3 | unit | verify with a wrong nonce; another domain; an 11-minute-old message; an account with no signing key | each refused, nothing saved | ⏭ | |
@@ -96,7 +96,7 @@ Four profiles, all accounts set up first (keys, padlock, sign-in, house of three
 | S-01 Welcome | first visit; keys already in this browser | U1 | ✅ 1366px + 375px (in a 375px frame; Chrome would not resize the window) |
 | S-02 Make or Restore Keys | type your name; making; restore; wrong words | U1 | ✅ 1366px + 375px (in a 375px frame; Chrome would not resize the window) |
 | S-03 Secret Words Backup | shown; confirm you saved them | U1 | ✅ 1366px + 375px (in a 375px frame; Chrome would not resize the window) |
-| S-04 Register Padlock | not enough test QOR; sign 1 of 2; sign 2 of 2; said no; pending; confirmed; failed | U2 | ⏭ |
+| S-04 Register Padlock | not enough test QOR; sign 1 of 2; sign 2 of 2; said no; pending; confirmed; failed | U2 | ✅ 1366px + 375px (375px frame): not enough test QOR, loading, sign 1 of 2, said no, pending, sign 2 of 2, confirmed. Failed: unit only |
 | S-05 House | loading; no other members; no papers; updating; Forget Keys sheet | U4, U5, U1 | ⏭ |
 | S-06 Add Member | checking card; no padlock; bad card; already in another house; added | U4 | ⏭ |
 | S-07 Gate | choose file or note; pick readers; too big; locking; signing; saved; save failed | U5 | ⏭ |

@@ -338,5 +338,5 @@ Covers: US-16      Screens: S-03, S-07      Depends on: U7      Est: 2h
 ## 6. Open questions
 
 1. ~~For Laras at G5~~ Settled 23 Nov: Laras kept all four picks: D-12 (titles hidden from the public store, seen by the house), NF-4 (2 MB limit), D-13 (no Rejected state at sign-in), D-14 (sender always a reader).
-2. Check in U2: the explorer's link format for a transaction and for an address (https://explore.qore.network, testnet switch).
+2. ~~Explorer link format~~ Settled 23 Nov (U2): `https://explore.qore.network/tx/{hash}` and `/address/{qor1…}`. The explorer keeps Testnet/Mainnet in its own header switch (a cookie; `?network=testnet` does nothing), so the page says "Switch it to Testnet at the top". Faucet: https://dashboard.qorechain.io/faucet (needs sign-in there).
 3. Keep checking until the deadline: the drill's attack log, look-alike projects, rule changes (from §1.6).

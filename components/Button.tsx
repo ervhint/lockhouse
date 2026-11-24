@@ -9,13 +9,13 @@ const variants = {
   danger: "bg-danger/15 border border-danger/50 text-danger hover:bg-danger/25",
 };
 
-type Props = { variant?: keyof typeof variants; loading?: boolean; href?: string; full?: boolean } & ComponentProps<"button">;
+type Props = { variant?: keyof typeof variants; loading?: boolean; href?: string; newTab?: boolean; full?: boolean } & ComponentProps<"button">;
 
-// The one button. A link when `href` is set. Disabled and loading look the same everywhere.
-export default function Button({ variant = "primary", loading, href, full, className = "", children, disabled, type = "button", ...rest }: Props) {
+// The one button. A link when `href` is set (`newTab` for other sites). Disabled and loading look the same everywhere.
+export default function Button({ variant = "primary", loading, href, newTab, full, className = "", children, disabled, type = "button", ...rest }: Props) {
   const off = disabled || loading;
   const cls = `inline-flex h-11 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-medium transition-[transform,background-color] active:scale-[0.96] ${variants[variant]} ${full ? "w-full" : ""} ${off ? "pointer-events-none opacity-50" : ""} ${className}`;
   const inner = <>{loading && <Loader2 className="size-4 animate-spin" aria-hidden />}{children}</>;
-  if (href && !off) return <Link href={href} className={cls}>{inner}</Link>;
+  if (href && !off) return <Link href={href} className={cls} {...(newTab && { target: "_blank", rel: "noreferrer" })}>{inner}</Link>;
   return <button type={type} className={cls} disabled={off} aria-busy={loading || undefined} {...rest}>{inner}</button>;
 }
