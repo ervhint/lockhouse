@@ -42,6 +42,8 @@
 | S-08 | Item | US-12, US-13, US-17 | opening; opened + "Signature Checked"; not for you; signature not proven |
 | S-09 | Drill (Simulation) | US-14, US-15, US-17 | all stored copies listed; Pretend Q-Day running; result; A Fake Drop-In (members): making the fake paper, failed (no one else in the house, no connection), then S-08 shows Signature Not Proven |
 | S-10 | Sign In With QoreChain | US-04 | signing; rejected; failed |
+| S-11 | Make a Recovery Key (`/house/recovery`, U10) | US-16 | words shown once; tick "I wrote the recovery words on paper"; saving; failed (words stay on screen); already has one. House gets a Recovery Key panel (none yet / made by {memberName}) and a saved toast; Put In shows Recovery Key as Always a Reader |
+| S-12 | Open With Recovery Words (`/recover`, U10, no sign-in) | US-16 | wrong words; no papers for these words; list; opening; the paper (S-08's view); can't reach QoreChain. Linked from Restore Your Keys and the House panel |
 
 **Web3 states covered** (workflow, Web3 track): no wallet connect (keys live in the page, not in QoreX), so "connect" is replaced by make/restore keys and sign-in. Wrong network → the app only talks to `qorechain-diana`. Signature request → S-04 says what each of the two signatures does. Insufficient funds → S-04 faucet branch. Submitted → pending → confirmed / failed with explorer link → S-04. Stale data → S-05 "list updating…".
 
@@ -94,7 +96,7 @@ Ten references from Laras (`internal/design-references/design-references-01…10
 
 **Tokens** (from sample 02, in `app/globals.css`): night `#0b1426`, slate `#1b2736`, mist `#eef1f6`, muted `#b4bfce`, lime `#e2ee9f` (primary action), amber `#e8a066` (warnings), danger `#f4a08e`. Font: Instrument Sans (400/500/600). Pills for buttons, 16px panels. Motion: only the Welcome fog and switch; app pages are calm; reduced-motion respected.
 
-**Routes:** `/` S-01 · `/keys` S-02 · `/keys/backup` S-03 · `/padlock` S-04 · `/house` S-05 · `/house/add` S-06 · `/put-in` S-07 · `/item/[id]` S-08 · `/drill` S-09 · `/sign-in` S-10. Every state in the inventory is reachable with `?state=…` (the "Prototype States" box bottom-left lists them). BFF mock: `GET /api/house` (data in `lib/mock.ts`, all `{placeholders}`). (P4 prototype only: the `?state=` jumps, StatePicker and `lib/mock.ts` were removed in U7.)
+**Routes:** `/` S-01 · `/keys` S-02 · `/keys/backup` S-03 · `/padlock` S-04 · `/house` S-05 · `/house/add` S-06 · `/put-in` S-07 · `/item/[id]` S-08 · `/drill` S-09 · `/sign-in` S-10 · `/house/recovery` S-11 · `/recover` S-12 (U10). Every state in the inventory is reachable with `?state=…` (the "Prototype States" box bottom-left lists them). BFF mock: `GET /api/house` (data in `lib/mock.ts`, all `{placeholders}`). (P4 prototype only: the `?state=` jumps, StatePicker and `lib/mock.ts` were removed in U7.)
 
 **Image list:** S-01 uses the 6 house pictures in `public/img/house/`. S-02 to S-10 use the night sky picture (blurred, dimmed) behind the header; no other pictures. Icons: lucide. Nothing missing.
 

@@ -2,6 +2,7 @@
 import type { RecipientCard } from "@qorechain/qoreseal";
 import { db } from "./db";
 import { checkCard } from "./padlock";
+import type { Recovery } from "./recovery";
 import { REST } from "./settings";
 
 export const NO_PADLOCK = "This address has no padlock in the Phone Book yet. Ask them to register their padlock and sign in once, then try again.";
@@ -27,19 +28,22 @@ export async function houseIdOf(address: string): Promise<string | null> {
 }
 
 /** What the House and Put In screens need (S-05, S-07): members in the order they joined, with the cards
- *  that lock papers to them (cards are public); papers newest first, with no locked copy. Null if in no house. */
+ *  that lock papers to them (cards are public); papers newest first, with no locked copy; the recovery key's
+ *  public half, if the house has one (U10; never its lookup). Null if in no house. */
 export async function houseOf(address: string) {
   const id = await houseIdOf(address);
   if (!id) return null;
-  const [m, i] = await Promise.all([
+  const [m, i, h] = await Promise.all([
     db().from("house_members").select("address, people!house_members_address_fkey(name, card)").eq("house_id", id).order("added_at"),
     db().from("items").select("id, title, readers, created_at, people(name)").eq("house_id", id).order("created_at", { ascending: false }),
+    db().from("houses").select("recovery").eq("id", id).single(),
   ]);
   if (m.error) throw m.error;
   if (i.error) throw i.error;
+  if (h.error) throw h.error;
   const members = (m.data as unknown as { address: string; people: { name: string; card: RecipientCard } }[])
     .map((r) => ({ name: r.people.name, address: r.address, card: r.people.card }));
   const items = (i.data as unknown as { id: string; title: string; readers: string[]; created_at: string; people: { name: string } }[])
     .map((r) => ({ id: r.id, title: r.title, sender: r.people.name, date: r.created_at, readers: r.readers.length }));
-  return { id, members, items };
+  return { id, members, items, recovery: h.data.recovery as Recovery | null };
 }

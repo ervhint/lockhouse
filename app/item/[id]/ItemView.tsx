@@ -1,12 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, FileText, Lock, ShieldAlert } from "lucide-react";
+import { Lock, ShieldAlert } from "lucide-react";
 import Heading from "@/components/Heading";
 import Panel from "@/components/Panel";
 import Button from "@/components/Button";
-import Badge from "@/components/Badge";
 import EmptyState from "@/components/EmptyState";
+import PaperView from "@/components/PaperView";
 import Skeleton from "@/components/Skeleton";
 import type { MessageSignature } from "@qorechain/qoresign";
 import { keysFrom, loadKeys } from "@/lib/keys";
@@ -15,14 +15,11 @@ import { openItem, type Paper } from "@/lib/items";
 type Row = { id: string; house_id: string; sender: string; senderName: string; title: string; created_at: string; readerCount: number; reader: boolean; fromMe: boolean; envelope?: string; signature?: MessageSignature };
 type View = { row: Row; proven: boolean; paper: Paper | null };
 
-const when = (d: string) => new Date(d).toLocaleDateString(undefined, { dateStyle: "medium" });
-
 // S-08: get the one locked copy, check the sender's signature on chain, open it on this device (AC-6.1).
 export default function ItemView({ id }: { id: string }) {
   const router = useRouter();
   const [view, setView] = useState<View | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
-  const [url, setUrl] = useState<string | null>(null);
   const retry = useRef<HTMLButtonElement>(null);
 
   const load = useCallback(async () => {
@@ -46,15 +43,6 @@ export default function ItemView({ id }: { id: string }) {
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (problem) retry.current?.focus(); }, [problem]);
 
-  // Pictures and PDFs show as they are; the object URL is made here and let go on leaving.
-  useEffect(() => {
-    const p = view?.paper;
-    if (!p || !(p.type.startsWith("image/") || p.type === "application/pdf")) return setUrl(null);
-    const u = URL.createObjectURL(new Blob([p.bytes as BlobPart], { type: p.type.startsWith("image/") ? p.type : "application/pdf" }));
-    setUrl(u);
-    return () => URL.revokeObjectURL(u);
-  }, [view]);
-
   const back = <Button variant="secondary" href="/house">Back to the House</Button>;
 
   if (problem === "gone") return <EmptyState page icon={Lock} title="This Paper Isn't Here" text="It isn't in your house, or it was never put in. Go back and pick one from the list." action={back} />;
@@ -77,31 +65,5 @@ export default function ItemView({ id }: { id: string }) {
   if (!row.reader && row.fromMe) return <EmptyState page warn icon={ShieldAlert} title="You Did Not Put This In" text="This paper says it is from you, but you are not one of its readers, and you can open everything you put in. Someone used your name. Do not trust it." action={back} />;
   if (!row.reader) return <EmptyState page icon={Lock} title="This Paper Is Not for You" text={`You are not one of this paper's readers. Ask ${row.senderName} to add you.`} action={back} />;
 
-  const save = () => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([paper!.bytes as BlobPart], { type: paper!.type }));
-    a.download = paper!.name;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
-  const preview = !paper ? null
-    : paper.type.startsWith("image/") && url ? <img src={url} alt={row.title} className="max-h-[32rem] w-full rounded-xl object-contain" />
-    : paper.type === "application/pdf" && url ? <iframe src={url} title={row.title} className="h-[32rem] w-full rounded-xl bg-white" />
-    : paper.type === "text/plain" ? <pre className="whitespace-pre-wrap break-words p-4 font-sans">{new TextDecoder().decode(paper.bytes)}</pre>
-    : <span className="flex items-center gap-3 p-4"><FileText className="size-6" aria-hidden />{paper.name}</span>;
-
-  return (
-    <>
-      <Heading title={row.title}>Put in by {row.senderName} · {when(row.created_at)} · {row.readerCount} {row.readerCount === 1 ? "Reader" : "Readers"}</Heading>
-      <Panel className="flex flex-col gap-5">
-        {proven
-          ? <Badge tone="ok">From {row.senderName} · Signature Checked on QoreChain</Badge>
-          : <div role="alert" className="flex flex-col gap-2 rounded-xl border border-danger/50 bg-danger/10 p-4"><Badge tone="bad">Signature Not Proven</Badge><p>This paper says it is from {row.senderName}, but the signature does not check out on QoreChain. Do not trust it.</p></div>}
-        {preview && <div className={`overflow-auto rounded-xl bg-white/6 ${proven ? "" : "select-none blur-md"}`} inert={!proven}>{preview}</div>}
-        {!paper && <p className="text-muted">This paper could not be opened with your keys.</p>}
-        {proven && paper && <Button onClick={save}><Download className="size-4" aria-hidden />Download Paper</Button>}
-        {back}
-      </Panel>
-    </>
-  );
+  return <PaperView title={row.title} senderName={row.senderName} date={row.created_at} readerCount={row.readerCount} proven={proven} paper={paper} back={back} />;
 }

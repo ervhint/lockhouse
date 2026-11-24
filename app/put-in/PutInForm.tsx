@@ -13,8 +13,9 @@ import Skeleton from "@/components/Skeleton";
 import Toast from "@/components/Toast";
 import { keysFrom, loadKeys } from "@/lib/keys";
 import { NOTE, fileProblem, lockCopy, signItem, titleProblem, type Item } from "@/lib/items";
+import { checkRecovery, type Recovery } from "@/lib/recovery";
 
-type House = { id: string; members: { name: string; address: string; card: RecipientCard }[] };
+type House = { id: string; members: { name: string; address: string; card: RecipientCard }[]; recovery: Recovery | null };
 type Step = "ready" | "locking" | "signing" | "saving";
 const SAVE_FAILED = "Could not save. Nothing was sent. Try again.";
 const nextFrame = () => new Promise((ok) => requestAnimationFrame(() => setTimeout(ok)));
@@ -79,11 +80,19 @@ export default function PutInForm() {
     setStep("locking");
     await nextFrame();
     let item: Item;
+    const rest = `${location.origin}/api/chain`;
+    let extra;
+    try { // the house's recovery key, if any, is one more reader; a member must have signed it (U10)
+      extra = house!.recovery ? [await checkRecovery(house!.recovery, house!.id, house!.members.map((m) => m.address), rest)] : [];
+    } catch {
+      setStep("ready");
+      return setErrors({ lock: "The house's recovery key didn't check out on QoreChain, so nothing was locked or sent. Try again in a moment." });
+    }
     try {
       const paper = kind === "file" ? { name: file!.name, type: file!.type || "application/octet-stream", bytes: new Uint8Array(await file!.arrayBuffer()) }
         : { ...NOTE, bytes: new TextEncoder().encode(note) };
       performance.mark("lock-start");
-      const copy = await lockCopy(paper, readers.map((m) => m.card), `${location.origin}/api/chain`);
+      const copy = await lockCopy(paper, readers.map((m) => m.card), rest, extra);
       console.info(`Locked for ${readers.length} readers in ${Math.round(performance.measure("lock", "lock-start").duration)} ms (card checks included)`);
       setLocked(readers.length);
       setStep("signing");
@@ -147,12 +156,18 @@ export default function PutInForm() {
                 </Checkbox>
               );
             })}
+            {house.recovery && (
+              <Checkbox checked disabled readOnly>
+                <span className="font-medium">Recovery Key</span>
+                <span className="ml-auto text-sm text-muted">Always a Reader</span>
+              </Checkbox>
+            )}
           </fieldset>
           <div className="flex flex-col gap-3">
           {/* Always in the page (never display:none), so screen readers announce each step. */}
           <div role="status" className="flex flex-wrap gap-2">
             {step === "locking" && <Badge tone="wait">Locking on This Device…</Badge>}
-            {locked > 0 && <Badge tone="ok">Locked on This Device · ML-KEM-1024 + X25519 · {locked} {locked === 1 ? "Reader" : "Readers"}</Badge>}
+            {locked > 0 && <Badge tone="ok">Locked on This Device · ML-KEM-1024 + X25519 · {locked} {locked === 1 ? "Reader" : "Readers"}{house.recovery && " + Recovery Key"}</Badge>}
             {step === "signing" && <Badge tone="wait">Signing With Your Key…</Badge>}
             {step === "saving" && <Badge tone="wait">Saving the Locked Copy…</Badge>}
           </div>
@@ -163,7 +178,7 @@ export default function PutInForm() {
           </div>
         </form>
       </Panel>
-      {saved && <Toast key={`ok${saved.round}`}>Put in. {saved.readers} {saved.readers === 1 ? "reader" : "readers"} can open it. <Link href="/house" className="underline">See the House</Link></Toast>}
+      {saved && <Toast key={`ok${saved.round}`}>Put in. {saved.readers} {saved.readers === 1 ? "reader" : "readers"}{house.recovery && " and the recovery key"} can open it. <Link href="/house" className="underline">See the House</Link></Toast>}
       {failed && (
         <Toast key={`bad${failed.round}`} tone="bad">
           <span className="flex flex-wrap items-center gap-x-3 gap-y-2">{failed.message}

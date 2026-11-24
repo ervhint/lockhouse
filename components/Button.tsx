@@ -14,7 +14,7 @@ type Props = { variant?: keyof typeof variants; loading?: boolean; href?: string
 // The one button. A link when `href` is set (`newTab` for other sites). Disabled and loading look the same everywhere.
 export default function Button({ variant = "primary", loading, href, newTab, full, className = "", children, disabled, type = "button", ...rest }: Props) {
   const off = disabled || loading;
-  const cls = `inline-flex h-11 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-medium transition-[transform,background-color] active:scale-[0.96] ${variants[variant]} ${full ? "w-full" : ""} ${off ? "pointer-events-none opacity-50" : ""} ${className}`;
+  const cls = `inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 py-1.5 text-center text-[15px] font-medium transition-[transform,background-color] active:scale-[0.96] ${variants[variant]} ${full ? "w-full" : ""} ${off ? "pointer-events-none opacity-50" : ""} ${className}`;
   const inner = <>{loading && <Loader2 className="size-4 animate-spin" aria-hidden />}{children}</>;
   if (href && !off) return <Link href={href} className={cls} aria-label={rest["aria-label"]} {...(newTab && { target: "_blank", rel: "noreferrer" })}>{inner}</Link>;
   return <button type={type} className={cls} disabled={off} aria-busy={loading || undefined} {...rest}>{inner}</button>;

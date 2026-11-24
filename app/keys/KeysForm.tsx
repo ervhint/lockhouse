@@ -36,6 +36,7 @@ export default function KeysForm({ restore }: { restore: boolean }) {
         {restore && <Input name="words" multiline autoComplete="off" autoCapitalize="none" spellCheck={false} label="Your Secret Words" placeholder="Type your secret words in order" hint="Separate the words with spaces." error={err.words} />}
         <Button type="submit" full>{restore ? "Restore My Keys" : "Make My Keys"}</Button>
         <Link href={restore ? "/keys" : "/keys?restore"} className="text-center text-muted underline">{restore ? "I Need New Keys Instead" : "I Already Have Secret Words"}</Link>
+        {restore && <Link href="/recover" className="text-center text-muted underline">I Have the House&apos;s Recovery Words</Link>}
       </Panel>
     </form>
   );

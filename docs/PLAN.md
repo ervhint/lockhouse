@@ -109,6 +109,8 @@ erDiagram
   houses {
     uuid id PK
     text owner FK "people.address"
+    jsonb recovery "U10: recovery key's public half, who made it, their signature"
+    text recovery_lookup "U10: SHA-256 only the recovery words give; unique"
     timestamptz created_at
   }
   house_members {
@@ -126,6 +128,7 @@ erDiagram
     jsonb signature "QoreSign message signature"
     text_array readers "qor1 addresses"
     int size
+    text recovery "U10: the lookup, when the recovery key is a reader"
     timestamptz created_at
   }
   drill_keys {
@@ -136,7 +139,7 @@ erDiagram
   }
 ```
 
-One migration file per unit that adds tables (U3: people, houses, house_members · U5: items · U7: drill_keys), applied to **Staging** `egtxrdfhmtdiujdiywkm` only.
+One migration file per unit that adds tables (U3: people, houses, house_members · U5: items · U7: drill_keys · U10: recovery columns), applied to **Staging** `egtxrdfhmtdiujdiywkm` only.
 
 ### 3.3 Server routes (the BFF)
 
@@ -147,6 +150,8 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 | `GET /api/house` · `POST /api/house/members` | house members | House, members, item list; add a member (U4, U5) |
 | `POST /api/items` · `GET /api/items/[id]` | house members | Put in; get one item for a reader (U5, U6) |
 | `GET /api/drill` · `POST /api/drill` | anyone · members | Every stored copy with no title, names or readers (`id, envelope`), plus the old-lock copies and given old keys; give my old keys (U7). One route instead of the planned `/api/copies` + `/api/drill`: the Drill needs both at once |
+| `POST /api/house/recovery` | members | Give the house its recovery key (U10): the public half and a lookup, signed by me and checked on chain. Once per house (409 after) |
+| `POST /api/recover` | anyone | Open With Recovery Words (U10): the lookup made from the words finds the papers locked to that key (copy, title, sender); 404 if none. No sign-in |
 | `POST /api/drill/fake` | members | Try a Fake Drop-In (U8, Simulation): plays a hacked server. Locks a made-up note to me, signs it with a throwaway key and stores it as if another member of my house sent it. Opening it shows Signature Not Proven |
 
 ### 3.4 Env vars
@@ -313,6 +318,8 @@ Covers: US-18      Screens: S-05      Depends on: U7      Est: 1.5h
 Covers: US-16      Screens: S-03, S-07      Depends on: U7      Est: 2h
 - AC-10.1 Given a house with a recovery key (separate secret words, kept on paper), when anything is put in, then the recovery key is one more reader, and those words open it on a new device. Tests: T-10.1 (integration + e2e)
 
+Built 24 Nov (D-16): any member makes it on `/house/recovery` (words made and shown once in the browser; only the public half, a signature and a lookup are sent). Put In checks the member's signature on chain before locking, so a hacked server can't slip in a key of its own; the server refuses a copy without the extra entry. `/recover` (no keys, no sign-in) finds and opens the papers. Removing the member who made it drops the key (they saw the words); papers already locked to it still open with its words.
+
 **Won't in this build:** group keys (US-19), a house picker (being in several houses).
 
 ## 5. Decisions log
@@ -334,6 +341,7 @@ Covers: US-16      Screens: S-03, S-07      Depends on: U7      Est: 2h
 | D-13 | 23 Nov | S-10 loses its "Rejected" state: pressing Sign In With My Key is the approval. S-04 keeps its two approvals with Not Now | Keys live in the page, so there is no wallet pop-up to say no to at sign-in |
 | D-14 | 23 Nov | The sender is always a reader of what they put in | They can see what they sent; one rule |
 | D-15 | 23 Nov | The test plan was written in the main chat, not by a subagent | All acceptance criteria were already here; a subagent would re-read everything |
+| D-16 | 24 Nov | The recovery key is a plain QoreSeal key from its own 24 words, not an account: no padlock on chain. Its public half is signed by the member who made it; the words find their papers through a SHA-256 lookup only they give (members see the public key, so it can't be the lookup). One per house; removing its maker drops it | QoreSeal's "recovery recipient (an offline key)". No test QOR or chain step; the signature keeps a hacked server from adding its own reader |
 
 ## 6. Open questions
 

@@ -142,6 +142,21 @@ describe("Remove Member (Staging)", () => {
     expect(theirs.items).toEqual([]);
     expect((await getItem(mate.address, paper)).status).toBe(404);
   }, 60_000);
+
+  // D-16: removing the member who made the recovery key drops it (they saw its words); removing anyone else keeps it
+  it("drops the recovery key only when its maker is removed", async () => {
+    const [owner, maker, other] = [await fakePerson("Owner"), await fakePerson("Maker"), await fakePerson("Other")];
+    for (const p of [maker, other]) expect(await addMember(owner.house, p.address, owner.address)).toBe("added");
+    const recovery = { mlkem: "00", x25519: "00", by: maker.address, signature: {} };
+    const { error } = await db().from("houses").update({ recovery, recovery_lookup: randomUUID().replaceAll("-", "").repeat(2) }).eq("id", owner.house);
+    if (error) throw error;
+    const keyOf = async () => (await (await getHouse(owner.address)).json()).recovery;
+
+    expect((await remove(owner.address, other.address)).status).toBe(200);
+    expect(await keyOf()).toEqual(recovery);
+    expect((await remove(owner.address, maker.address)).status).toBe(200);
+    expect(await keyOf()).toBeNull();
+  }, 60_000);
 });
 
 describe.runIf(tari)("Add Member with a real card (testnet + Staging)", () => {

@@ -7,7 +7,8 @@ import { signCard } from "../lib/padlock";
 import { MAX_FILE, fileProblem, lockItem, openItem, pack, signItem, titleProblem, unpack } from "../lib/items";
 import { CHAIN_ID, ITEM_PURPOSE, REST } from "../lib/settings";
 import { db } from "../lib/db";
-import { houseIdOf } from "../lib/house";
+import { houseIdOf, houseOf } from "../lib/house";
+import { checkRecovery } from "../lib/recovery";
 import { SESSION, seal as sealCookie } from "../lib/session";
 import { POST as putInRoute } from "../app/api/items/route";
 import { GET as houseRoute } from "../app/api/house/route";
@@ -65,6 +66,11 @@ describe.runIf(ayu && tari && ratna)("three readers (testnet)", () => {
 const ORIGIN = "http://localhost:3000";
 const putIn = (by: string, body: unknown) =>
   putInRoute(new NextRequest(`${ORIGIN}/api/items`, { method: "POST", headers: { cookie: `${SESSION}=${sealCookie(SESSION, by, 600)}` }, body: JSON.stringify(body) }));
+// Ayu's house may have a recovery key (U10): then, like Put In, every paper also locks to it.
+const recoveryOf = async (address: string) => {
+  const h = (await houseOf(address))!;
+  return h.recovery ? [await checkRecovery(h.recovery, h.id, h.members.map((m) => m.address), REST)] : [];
+};
 const stored = async (id: string) => !!(await db().from("items").select("id").eq("id", id).maybeSingle()).data;
 const madeItems: string[] = [];
 afterAll(async () => { if (madeItems.length) await db().from("items").delete().in("id", madeItems); });
@@ -73,7 +79,7 @@ describe.runIf(ayu && tari)("POST /api/items (testnet + Staging)", () => {
   const [a, t] = ayu && tari ? [keysFrom(ayu), keysFrom(tari)] : [];
   const good = async (title = "Test Paper") => {
     const houseId = (await houseIdOf(a!.address))!;
-    const item = await lockItem({ keys: a!, houseId, title, file: { name: "n.txt", type: "text/plain", bytes: new TextEncoder().encode("hi") }, cards: [signCard(a!), signCard(t!)], rest: REST });
+    const item = await lockItem({ keys: a!, houseId, title, file: { name: "n.txt", type: "text/plain", bytes: new TextEncoder().encode("hi") }, cards: [signCard(a!), signCard(t!)], extra: await recoveryOf(a!.address), rest: REST });
     madeItems.push(item.id);
     return { houseId, item };
   };
@@ -121,7 +127,7 @@ describe.runIf(ayu && tari && ratna)("GET /api/items/[id] and openItem (testnet 
   const file = { name: "note.txt", type: "text/plain", bytes: new TextEncoder().encode("hello family") };
   const putFor = async (readers: ReturnType<typeof keysFrom>[]) => {
     const houseId = (await houseIdOf(a!.address))!;
-    const item = await lockItem({ keys: a!, houseId, title: "Open Me", file, cards: readers.map(signCard), rest: REST });
+    const item = await lockItem({ keys: a!, houseId, title: "Open Me", file, cards: readers.map(signCard), extra: await recoveryOf(a!.address), rest: REST });
     madeItems.push(item.id);
     expect((await putIn(a!.address, item)).status).toBe(200);
     return item;

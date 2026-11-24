@@ -1,6 +1,6 @@
 // Putting in a paper (U5). The browser half: check the readers' cards, lock, sign. The checks the server shares.
 // The file or note never leaves the browser unlocked (INV-1); its name and type travel inside the envelope (AC-5.2).
-import { envelopeFromText, envelopeToText, open, seal, toHex, type RecipientCard } from "@qorechain/qoreseal";
+import { envelopeFromText, envelopeToText, open, seal, toHex, type RecipientCard, type SealKeyPair, type SealRecipient } from "@qorechain/qoreseal";
 import { signMessage, type MessageSignature } from "@qorechain/qoresign";
 import { verifyMessageWithChain } from "@qorechain/qoresign/network";
 import type { keysFrom } from "./keys";
@@ -49,9 +49,10 @@ export async function itemText(houseId: string, id: string, title: string, envel
 export const signItem = async (keys: Keys, houseId: string, id: string, title: string, envelope: string) =>
   signMessage({ chainId: CHAIN_ID, signer: keys.address, data: await itemText(houseId, id, title, envelope), classicalKey: keys.classical, pqKey: keys.pq });
 
-/** Check each reader's card on chain, then seal one hybrid envelope with the item id as AAD (AC-5.1, INV-4). */
-export async function lockCopy(paper: Paper, cards: RecipientCard[], rest: string) {
-  const recipients = await Promise.all(cards.map((c) => checkCard(c, rest)));
+/** Check each reader's card on chain, then seal one hybrid envelope with the item id as AAD (AC-5.1, INV-4).
+ *  `extra`: readers with no card, already checked (the house's recovery key, U10). */
+export async function lockCopy(paper: Paper, cards: RecipientCard[], rest: string, extra: SealRecipient[] = []) {
+  const recipients = [...await Promise.all(cards.map((c) => checkCard(c, rest))), ...extra];
   const id = crypto.randomUUID();
   const envelope = envelopeToText(seal({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, recipients, plaintext: pack(paper), aad: enc.encode(id) }));
   return { id, envelope, readers: cards.map((c) => c.address) };
@@ -59,7 +60,7 @@ export async function lockCopy(paper: Paper, cards: RecipientCard[], rest: strin
 
 /** Open a paper (U6): check the sender's signature on chain, then open the envelope with my keys.
  *  `paper` is null if it can't be opened; `proven` is false if the signature doesn't check out (AC-6.1, AC-6.4). */
-export async function openItem(keys: Keys, it: { id: string; houseId: string; sender: string; title: string; envelope: string; signature: MessageSignature }, rest: string) {
+export async function openItem(keys: { seal: SealKeyPair }, it: { id: string; houseId: string; sender: string; title: string; envelope: string; signature: MessageSignature }, rest: string) {
   const proven = await verifyMessageWithChain({ rest, chainId: CHAIN_ID, signer: it.sender, data: await itemText(it.houseId, it.id, it.title, it.envelope), signature: it.signature })
     .then(() => true, (e) => { if ((e as { code?: string }).code === "NETWORK_UNAVAILABLE") throw e; return false; });
   let paper: Paper | null = null;
@@ -70,7 +71,7 @@ export async function openItem(keys: Keys, it: { id: string; houseId: string; se
 }
 
 /** Lock and sign in one go (what the tests use; the Put In screen shows each step). */
-export async function lockItem(a: { keys: Keys; houseId: string; title: string; file: Paper; cards: RecipientCard[]; rest: string }): Promise<Item> {
-  const copy = await lockCopy(a.file, a.cards, a.rest);
+export async function lockItem(a: { keys: Keys; houseId: string; title: string; file: Paper; cards: RecipientCard[]; extra?: SealRecipient[]; rest: string }): Promise<Item> {
+  const copy = await lockCopy(a.file, a.cards, a.rest, a.extra);
   return { ...copy, title: a.title, signature: await signItem(a.keys, a.houseId, copy.id, a.title, copy.envelope) };
 }

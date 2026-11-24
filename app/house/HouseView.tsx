@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { ExternalLink, FilePlus2, FileText, Loader2, Plus, UserMinus, UserRound, Users } from "lucide-react";
+import { ExternalLink, FilePlus2, FileText, KeyRound, Loader2, Plus, UserMinus, UserRound, Users } from "lucide-react";
 import { fetchKemKey } from "@qorechain/qoreseal/network";
 import Panel from "@/components/Panel";
 import Button from "@/components/Button";
@@ -14,7 +14,7 @@ import Sheet from "@/components/Sheet";
 import Toast from "@/components/Toast";
 import { explorerAddress } from "@/lib/settings";
 
-type House = { me: string; members: { name: string; address: string }[]; items: { id: string; title: string; sender: string; date: string; readers: number }[] };
+type House = { me: string; recovery: { by: string } | null; members: { name: string; address: string }[]; items: { id: string; title: string; sender: string; date: string; readers: number }[] };
 
 const PADLOCK = {
   wait: "Checking the Phone Book",
@@ -64,13 +64,15 @@ function RemoveSheet({ member, onRemoved }: { member: { name: string; address: s
 
 // S-05: members and papers from /api/house. First load: skeletons. Coming back to the window: "Updating the list…" (AC-4.9).
 // `remove` (an address, from `?remove=`) opens the Remove sheet (U9).
-export default function HouseView({ remove }: { remove?: string }) {
+export default function HouseView({ remove, recoverySaved }: { remove?: string; recoverySaved?: boolean }) {
   const router = useRouter();
   const [house, setHouse] = useState<House | null>(null);
   const [busy, setBusy] = useState(true);
   const [failed, setFailed] = useState(false);
   const [round, setRound] = useState(0);
   const [removed, setRemoved] = useState<{ name: string; round: number } | null>(null);
+  const [saved] = useState(recoverySaved); // kept after the address loses `?recovery`, so a reload doesn't say it again
+  useEffect(() => { if (saved) router.replace("/house"); }, [saved, router]);
 
   const load = useCallback(async () => {
     setBusy(true);
@@ -106,9 +108,9 @@ export default function HouseView({ remove }: { remove?: string }) {
       </p>
       <div className="flex flex-col gap-8">
         <Panel className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 id="members" tabIndex={-1} className="text-xl font-medium">Members</h2>
-            {house && !alone && <Button variant="secondary" href="/house/add"><Plus className="size-4" aria-hidden />Add Someone</Button>}
+            {house && !alone && <Button variant="secondary" href="/house/add" className="whitespace-nowrap"><Plus className="size-4" aria-hidden />Add Someone</Button>}
           </div>
           {!house ? <><Skeleton /><Skeleton /></> : <>
             <ul className="flex flex-col gap-2">
@@ -120,8 +122,8 @@ export default function HouseView({ remove }: { remove?: string }) {
                   <span className="flex flex-wrap items-center gap-2 sm:ml-auto">
                     <PadlockBadge address={m.address} round={round} />
                     {m.address !== house.me
-                      ? <Button variant="ghost" href={`/house?remove=${m.address}`} className="h-9! px-3!" aria-label={`Remove ${m.name}`}><UserMinus className="size-4" aria-hidden />Remove</Button>
-                      : <span aria-hidden className="invisible max-sm:hidden"><Button variant="ghost" className="h-9! px-3!" tabIndex={-1}><UserMinus className="size-4" />Remove</Button></span>}{/* keeps the badges in one column on wide screens */}
+                      ? <Button variant="ghost" href={`/house?remove=${m.address}`} className="min-h-9! px-3!" aria-label={`Remove ${m.name}`}><UserMinus className="size-4" aria-hidden />Remove</Button>
+                      : <span aria-hidden className="invisible max-sm:hidden"><Button variant="ghost" className="min-h-9! px-3!" tabIndex={-1}><UserMinus className="size-4" />Remove</Button></span>}{/* keeps the badges in one column on wide screens */}
                   </span>
                 </li>
               ))}
@@ -132,9 +134,9 @@ export default function HouseView({ remove }: { remove?: string }) {
         </Panel>
 
         <Panel className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-medium">Papers</h2>
-            <Button href="/put-in"><FilePlus2 className="size-4" aria-hidden />Put In a Paper</Button>
+            <Button href="/put-in" className="whitespace-nowrap"><FilePlus2 className="size-4" aria-hidden />Put In a Paper</Button>
           </div>
           {!house ? <><Skeleton /><Skeleton /></> : house.items.length === 0
             ? <EmptyState icon={FileText} title="No Papers Yet" text="Put in the first paper. It is locked on this device before anything is sent." action={<Button href="/put-in">Put In a Paper</Button>} />
@@ -149,9 +151,22 @@ export default function HouseView({ remove }: { remove?: string }) {
                 ))}
               </ul>}
         </Panel>
+
+        {/* U10: one more reader of every paper put in from now on, opened with its own words on any device */}
+        <Panel className="flex flex-col gap-4">
+          <h2 className="text-xl font-medium">Recovery Key</h2>
+          {!house ? <Skeleton /> : house.recovery
+            ? <>
+                <Badge tone="ok">Recovery Key Made by {house.members.find((m) => m.address === house.recovery!.by)?.name}</Badge>
+                <p className="text-muted">Every paper put in since it was made can also be opened with the recovery words, on any device. Papers put in before it can&apos;t.</p>
+                <Button variant="secondary" href="/recover" className="sm:self-start">Open With Recovery Words</Button>
+              </>
+            : <EmptyState icon={KeyRound} title="No Recovery Key Yet" text="If someone loses their secret words, what was locked for them is lost. A recovery key is a second set of words, kept on paper, that can also open every paper put in after it is made." action={<Button variant="secondary" href="/house/recovery">Make a Recovery Key</Button>} />}
+        </Panel>
       </div>
       {leaving && <RemoveSheet member={leaving} onRemoved={(name) => { setRemoved({ name, round: Date.now() }); router.replace("/house"); load(); }} />}
       {removed && <Toast key={removed.round}>{removed.name} is out of the house.</Toast>}
+      {saved && !removed && <Toast>The recovery key is saved. Papers put in from now on can also be opened with its words.</Toast>}
     </>
   );
 }

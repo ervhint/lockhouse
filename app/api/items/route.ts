@@ -27,8 +27,13 @@ export async function POST(req: NextRequest) {
   if (!Array.isArray(readers) || !readers.includes(me) || new Set(readers).size !== readers.length || readers.some((r) => typeof r !== "string"))
     return refuse("Pick each reader once, and keep yourself as a reader.");
 
-  const { data: members, error } = await db().from("house_members").select("address").eq("house_id", house);
+  const [{ data: members, error }, h] = await Promise.all([
+    db().from("house_members").select("address").eq("house_id", house),
+    db().from("houses").select("recovery_lookup").eq("id", house).single(),
+  ]);
   if (error) throw error;
+  if (h.error) throw h.error;
+  const recovery = h.data.recovery_lookup; // the house's recovery key is one more reader of every paper (U10)
   const inHouse = new Set(members.map((m) => m.address));
   if (!readers.every((r: string) => inHouse.has(r))) return refuse("Every reader must be in your house.");
 
@@ -36,7 +41,9 @@ export async function POST(req: NextRequest) {
   try {
     const env = typeof envelope === "string" ? envelopeFromText(envelope) : null;
     const parsed = env && parseEnvelope(env);
-    if (!parsed || parsed.mode !== "hybrid" || parsed.entries.length !== readers.length) return refuse("The locked copy must be a hybrid lock with one entry per reader.");
+    if (!parsed || parsed.mode !== "hybrid") return refuse("The locked copy must be a hybrid lock with one entry per reader.");
+    if (parsed.entries.length !== readers.length + (recovery ? 1 : 0))
+      return refuse(recovery ? "This house has a recovery key, so it must be one more reader. Reload the page, then put it in again." : "The locked copy must be a hybrid lock with one entry per reader.");
     if (parsed.ciphertext.length - 16 > MAX_FILE + NAME_ROOM) return refuse(`The file is over the ${MAX_FILE / 1024 / 1024} MB limit.`);
     size = env.length;
   } catch {
@@ -50,7 +57,7 @@ export async function POST(req: NextRequest) {
     return refuse("Your signature doesn't match this paper. Nothing was saved.");
   }
 
-  const { error: failed } = await db().from("items").insert({ id, house_id: house, sender: me, title, envelope, signature, readers, size });
+  const { error: failed } = await db().from("items").insert({ id, house_id: house, sender: me, title, envelope, signature, readers, size, recovery });
   if (failed) return failed.code === "23505" ? refuse("This paper is already saved.") : Promise.reject(failed);
   return Response.json({ id, readers: readers.length });
 }
