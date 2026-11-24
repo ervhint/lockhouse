@@ -11,8 +11,8 @@
   --color-lime: #e2ee9f;
   --color-lime-light: #f7f8dc;
   --color-lime-deep: #6d8f2a;
-  --color-amber: #e8a066;
-  --color-danger: #f4a08e;
+  --color-amber: #eeb88c; /* lighter than sample 02 for 4.5:1 on the member rows (U4 review) */
+  --color-danger: #f7b8aa; /* same */
   --radius-panel: 16px;
 }
 

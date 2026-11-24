@@ -22,13 +22,13 @@ const PADLOCK = {
 };
 
 // Read live from the chain, not from our database (AC-4.1, D-10); links to their address on the explorer.
-function PadlockBadge({ address }: { address: string }) {
+function PadlockBadge({ address, round }: { address: string; round: number }) {
   const [tone, setTone] = useState<keyof typeof PADLOCK>("wait");
   useEffect(() => {
     fetchKemKey({ rest: `${location.origin}/api/chain`, address }).then((k) => setTone(k.registered ? "ok" : "bad"), () => setTone("warn"));
-  }, [address]);
+  }, [address, round]); // checked again each time the list reloads, so "Not Reached" can recover
   return (
-    <a href={explorerAddress(address)} target="_blank" rel="noreferrer" aria-label={`${PADLOCK[tone]}. Opens the explorer`} className="rounded-full hover:brightness-125">
+    <a href={explorerAddress(address)} target="_blank" rel="noreferrer" aria-label={`${PADLOCK[tone]}. Opens the explorer`} className="relative inline-flex rounded-full hover:brightness-125 after:absolute after:inset-x-0 after:-inset-y-1">
       <Badge tone={tone}>{PADLOCK[tone]}<ExternalLink className="size-3" aria-hidden /></Badge>
     </a>
   );
@@ -40,12 +40,13 @@ export default function HouseView() {
   const [house, setHouse] = useState<House | null>(null);
   const [busy, setBusy] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [round, setRound] = useState(0);
 
   const load = useCallback(async () => {
     setBusy(true);
     const res = await fetch("/api/house", { cache: "no-store" }).catch(() => null);
     if (res?.status === 401) return router.replace("/sign-in");
-    if (res?.ok) { setHouse(await res.json()); setFailed(false); } else setFailed(true);
+    if (res?.ok) { setHouse(await res.json()); setFailed(false); setRound((r) => r + 1); } else setFailed(true);
     setBusy(false);
   }, [router]);
 
@@ -57,7 +58,7 @@ export default function HouseView() {
 
   if (failed && !house) return (
     <Panel className="flex flex-col items-start gap-4">
-      <p>Your house didn&apos;t load. Check your connection, then try again.</p>
+      <p role="alert">Your house didn&apos;t load. Check your connection, then try again.</p>
       <Button variant="secondary" onClick={load} loading={busy}>Try Again</Button>
     </Panel>
   );
@@ -81,7 +82,7 @@ export default function HouseView() {
                   <UserRound className="size-5 text-muted" aria-hidden />
                   <span className="font-medium">{m.name}</span>
                   <AddressChip address={m.address} copy />
-                  <span className="sm:ml-auto"><PadlockBadge address={m.address} /></span>
+                  <span className="sm:ml-auto"><PadlockBadge address={m.address} round={round} /></span>
                 </li>
               ))}
             </ul>

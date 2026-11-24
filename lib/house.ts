@@ -5,7 +5,7 @@ import { checkCard } from "./padlock";
 import { REST } from "./settings";
 
 export const NO_PADLOCK = "This address has no padlock in the Phone Book yet. Ask them to register their padlock and sign in once, then try again.";
-export const BAD_CARD = "Their signed card does not match this address. Nothing was added.";
+export const BAD_CARD = "Their signed card does not match this address. Nothing was added. Ask them to sign in to Lockhouse again to renew their card, then try again.";
 
 /** Null if the card matches both keys the account has on chain; else what's wrong, in plain words (AC-4.4, AC-4.5). */
 export async function cardProblem(card: RecipientCard) {

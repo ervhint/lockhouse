@@ -10,7 +10,7 @@ export default function AddressChip({ address = "{qorAddress}", href, copy }: { 
   const text = address.length > 20 ? `${address.slice(0, 10)}…${address.slice(-6)}` : address;
   if (href) return <a href={href} target="_blank" rel="noreferrer" title={address} className={`${cls} hover:bg-white/16`}>{text}<ExternalLink className="size-3" aria-label="Opens the explorer" /></a>;
   if (copy) return (
-    <button type="button" title={address} aria-label={`Copy Full Address ${address}`} className={`${cls} hover:bg-white/16`}
+    <button type="button" title={address} aria-label={`Copy Full Address ${address}`} className={`${cls} relative hover:bg-white/16 after:absolute after:inset-x-0 after:-inset-y-1`}
       onClick={async () => { await navigator.clipboard.writeText(address); setCopied(true); setTimeout(() => setCopied(false), 2000); }}>
       {text}{copied ? <Check className="size-3" aria-hidden /> : <Copy className="size-3" aria-hidden />}
       <span className="sr-only" role="status">{copied ? "Address copied" : ""}</span>

@@ -7,7 +7,7 @@ import { SESSION, unseal } from "@/lib/session";
 const refuse = (error: string, status = 400) => Response.json({ error }, { status });
 const SAID = {
   here: "They are already in your house.",
-  taken: "They are already in another house. Nothing was changed.",
+  taken: "They are already in another house with other people. Nothing was changed. Someone can only join while their own house is empty.",
   unknown: NO_PADLOCK,
 } as Record<string, string>;
 
