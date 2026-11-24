@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import Logo from "./Logo";
+import UserMenu from "./UserMenu";
 
 // Header + night-house background for every page after the Welcome screen. `signedIn` shows the menu.
 export default function AppShell({ children, signedIn = true }: { children: ReactNode; signedIn?: boolean }) {
@@ -16,13 +16,7 @@ export default function AppShell({ children, signedIn = true }: { children: Reac
             <Link href="/house" className="rounded-full px-3 py-3 hover:bg-white/10">House</Link>
             <Link href="/put-in" className="rounded-full px-3 py-3 hover:bg-white/10">Put In</Link>
             <Link href="/drill" className="rounded-full px-3 py-3 hover:bg-white/10">Drill</Link>
-            <details className="relative">
-              <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full bg-white/10 px-3 py-3">{"{username}"}<ChevronDown className="size-4" aria-hidden /></summary>
-              <div className="absolute right-0 mt-2 w-64 rounded-xl border border-white/20 bg-slate p-1">
-                <Link href="/" className="block rounded-lg px-3 py-3 hover:bg-white/10">Sign Out</Link>
-                <Link href="/house?state=forget" className="block rounded-lg px-3 py-3 text-danger hover:bg-white/10">Forget Keys on This Device</Link>
-              </div>
-            </details>
+            <UserMenu />
           </nav>
         )}
       </header>

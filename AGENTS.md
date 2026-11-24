@@ -32,6 +32,7 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 - `lib/settings.ts` is the only place for chain id, REST, RPC, explorer, faucet and the item purpose. Testnet only; no env var can change it.
 - Browser: keys made from the 24 secret words (QoreSeal, QoreSign); words stay in localStorage. Server routes (`app/api/*`) only hold locked copies, signed cards and houses, through the Supabase service role key (RLS on, no policies).
 - Chain calls from the browser go through `/api/chain/[...path]` (fixed path list, U2). Routes and tables: PLAN §3.3 and §3.2.
+- Session (U3): `lib/session.ts` signs cookies (`seal`/`unseal`); member pages call `await signedIn()`, member API routes check `unseal(SESSION, …)` and answer 401. Supabase: `lib/db.ts` (service role, server only); migrations in `supabase/migrations/`, applied to Staging by hand.
 - Env vars (names in `.env.example`): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET` (server only, no `NEXT_PUBLIC_`), `TEST_MNEMONIC_1..3` (tests only).
 - Tests live in `tests/*.test.ts`. QoreSeal errors carry `.code` (e.g. `NOT_A_RECIPIENT`), not the code in the message.
 
@@ -74,7 +75,8 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 - EmptyState · `components/EmptyState.tsx` · icon, title, text, action
 - Skeleton · `components/Skeleton.tsx` · loading placeholder
 - Heading · `components/Heading.tsx` · page title + one sentence
-- AppShell · `components/AppShell.tsx` · header, user menu (Sign Out, Forget Keys), night background
+- AppShell · `components/AppShell.tsx` · header, night background; `signedIn` shows the nav + UserMenu
+- UserMenu · `components/UserMenu.tsx` · signed-in menu: name from this browser, Sign Out, Forget Keys; no keys → Welcome (AC-3.7); exports `signOut()`
 - Logo · `components/Logo.tsx` · the sun-ray mark
 - Hero · `components/Hero.tsx` (+ `hero.css`) · Welcome screen from sample 02 (fog, Today / After Q-Day switch)
 - StatePicker · `components/StatePicker.tsx` · prototype-only `?state=` jumper; delete in P6

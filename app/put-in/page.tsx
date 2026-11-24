@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { signedIn } from "@/lib/session";
 import AppShell from "@/components/AppShell";
 import Heading from "@/components/Heading";
 import Panel from "@/components/Panel";
@@ -13,6 +14,7 @@ import { members } from "@/lib/mock";
 
 // S-07 Gate (Put In)
 export default async function PutIn(props: PageProps<"/put-in">) {
+  await signedIn(); // no session: off to Sign In (AC-3.5)
   const { state = "" } = (await props.searchParams) as { state?: string };
   const busy = state === "locking" || state === "signing";
   return (

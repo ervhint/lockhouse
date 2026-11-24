@@ -1,4 +1,5 @@
 import { UserRound } from "lucide-react";
+import { signedIn } from "@/lib/session";
 import AppShell from "@/components/AppShell";
 import Heading from "@/components/Heading";
 import Panel from "@/components/Panel";
@@ -10,6 +11,7 @@ import StatePicker from "@/components/StatePicker";
 
 // S-06 Add Member
 export default async function AddMember(props: PageProps<"/house/add">) {
+  await signedIn(); // no session: off to Sign In (AC-3.5)
   const { state = "" } = (await props.searchParams) as { state?: string };
   const error = state === "nophone" ? "This address has no padlock in the Phone Book yet. Ask them to register their padlock first." : state === "bad" ? "Their signed card does not match this address. Nothing was added." : undefined;
   return (

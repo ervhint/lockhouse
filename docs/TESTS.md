@@ -24,7 +24,7 @@
 | T-1.4 | AC-1.4 | unit + e2e | restore test words 1 in a fresh profile | same qor1 address as the test account | ✅ | unit: test words 1 → qor1w0c3…s60ha (tests/keys.test.ts). e2e done in one profile with the public BIP-39 vector, not a 2nd profile |
 | T-1.5 | AC-1.5 | unit | restore with 23 words; with one word changed | inline error, nothing kept | ✅ | tests/keys.test.ts; Chrome: bad last word → inline error, localStorage empty |
 | T-1.6 | AC-1.6 | e2e | Make My Keys with an empty name | inline error | ✅ | Chrome: "Type your name.", focus on the field, nothing kept |
-| T-1.7 | AC-1.7 | e2e | menu → Forget Keys on This Device → confirm | words and name gone, signed out, Welcome first-visit | ✅ (part) | Chrome: words + name gone, Welcome first visit. "Signed out" waits for U3 |
+| T-1.7 | AC-1.7 | e2e | menu → Forget Keys on This Device → confirm | words and name gone, signed out, Welcome first-visit | ✅ | Chrome: words + name gone, Welcome first visit. U3 (24 Nov): Forget My Keys also signs out: /api/house 401, /house redirects, Welcome shows Make Your Keys + Restore Your Keys (Tari's keys put back after) |
 | T-2.1 | AC-2.1 | e2e | open Register Padlock with a new, unfunded account; then fund it; Check Again | Not Enough Test QOR + address + faucet link; then the start button | ✅ (part) | Chrome 23 Nov, new unfunded keys: Not Enough Test QOR, "0 test QOR", full address + Copy, faucet link (dashboard.qorechain.io/faucet, new tab), Check Again re-reads via /api/chain (3 GETs). Funding a fresh account not run (faucet needs Laras's sign-in) |
 | T-2.2 | AC-2.2 | e2e | Register My Padlock | Signature 1 of 2 explains itself; nothing sent before Approve (network tab) | ✅ | Chrome 24 Nov, test account 2 ("Tari"): Signature 1 of 2 shows what it signs; no /api/chain request until Approve; focus lands on Approve |
 | T-2.3 | AC-2.3 | e2e | Not Now at step 1, then Try Again; same at step 2 | "You said no to signing. Nothing was sent."; back at the same step | ✅ | Chrome: Not Now at step 1 and at step 2 → "You said no to signing. Nothing was sent.", no request; Try Again (keyboard) → same step |
@@ -33,13 +33,13 @@
 | T-2.6 | AC-2.6 | unit + e2e | map refusal codes 250–254 to text; force a refusal | Failed names the step, plain reason, Try Again skips finished steps | ✅ (unit) · e2e ⏭ | tests/padlock.test.ts: codes 250–254, simulation refusal, insufficient funds, network down. A real refusal was not forced in Chrome |
 | T-2.7 | AC-2.7 | integration | sign the card for a registered test account, check it against the chain | `verifyRecipientCard` passes | ✅ | tests/padlock.test.ts: signCard → checkCard passes against the chain; a changed X25519 key is refused |
 | T-2.8 | AC-2.8 | unit | `/api/chain` with an unlisted path; with a full URL to another host | 404, nothing forwarded | ✅ | tests/chain-route.test.ts: 4 unlisted paths/other host → 404, fetch never called; a listed path goes to api-testnet.qore.host only |
-| T-3.1 | AC-3.1 | e2e golden + integration | Sign In With My Key | lands on the House; cookie is httpOnly, SameSite=Lax, 7 days | ⏭ | |
-| T-3.2 | AC-3.2 | integration | first sign-in of a test account | people row with name + checked card; a house with one member | ⏭ | |
-| T-3.3 | AC-3.3 | unit | verify with a wrong nonce; another domain; an 11-minute-old message; an account with no signing key | each refused, nothing saved | ⏭ | |
-| T-3.4 | AC-3.4 | unit | send the same nonce twice | second one refused | ⏭ | |
-| T-3.5 | AC-3.5 | integration | call the member routes and open the house pages with no session | 401 / sent to Sign In | ⏭ | |
-| T-3.6 | AC-3.6 | e2e | menu → Sign Out | Welcome; keys still in the browser | ⏭ | |
-| T-3.7 | AC-3.7 | e2e | keep the session cookie, clear the keys, open the House | sent to Welcome | ⏭ | |
+| T-3.1 | AC-3.1 | e2e golden + integration | Sign In With My Key | lands on the House; cookie is httpOnly, SameSite=Lax, 7 days | ✅ | tests/auth.test.ts: 200, cookie httpOnly + SameSite=Lax + 7 days + path /; not Secure on http, Secure on https (second test). Chrome 24 Nov: Sign In as Tari → House, menu shows Tari |
+| T-3.2 | AC-3.2 | integration | first sign-in of a test account | people row with name + checked card; a house with one member | ✅ | tests/auth.test.ts + Staging: Ayu's row with a card for the same address, a house with 1 member |
+| T-3.3 | AC-3.3 | unit | verify with a wrong nonce; another domain; an 11-minute-old message; an account with no signing key | each refused, nothing saved | ✅ | tests/auth.test.ts: each refused for its own reason (nonce does not match / domain / older than max age / no ML-DSA-87 key), 401 "Sign-in failed. Try again.", no cookie, nothing saved |
+| T-3.4 | AC-3.4 | unit | send the same nonce twice | second one refused | ✅ | tests/auth.test.ts: the same body + nonce cookie again → 401 (`used_nonces`) |
+| T-3.5 | AC-3.5 | integration | call the member routes and open the house pages with no session | 401 / sent to Sign In | ✅ | tests/auth.test.ts: /api/house 401 with no or a forged cookie. curl: /house, /house/add, /put-in, /item/x → 307 /sign-in |
+| T-3.6 | AC-3.6 | e2e | menu → Sign Out | Welcome; keys still in the browser | ✅ | Chrome: menu → Sign Out → Welcome "Welcome back, Tari"; keys still in localStorage; /api/house then 401 |
+| T-3.7 | AC-3.7 | e2e | keep the session cookie, clear the keys, open the House | sent to Welcome | ✅ | Chrome: signed in, keys taken out of localStorage, /house → Welcome; keys put back after |
 | T-4.1 | AC-4.1 | e2e golden | Owner's House with two members | own names, short addresses, badges link to the explorer; badge read from the chain (network) | ⏭ | |
 | T-4.2 | AC-4.2 | e2e | House of a new account | No Other Members + Add Someone | ⏭ | |
 | T-4.3 | AC-4.3 | integration + e2e | Owner adds Member A's address | on the list within 2 s; Member A sees the Owner's house after reload | ⏭ | |
@@ -102,7 +102,7 @@ Four profiles, all accounts set up first (keys, padlock, sign-in, house of three
 | S-07 Gate | choose file or note; pick readers; too big; locking; signing; saved; save failed | U5 | ⏭ |
 | S-08 Item | opening; opened + Signature Checked; not for you; signature not proven | U6 | ⏭ |
 | S-09 Drill | stored copies; gave old keys; Pretend Q-Day running; result; no old keys yet | U7 | ⏭ |
-| S-10 Sign In | ready; signing; failed | U3 | ⏭ |
+| S-10 Sign In | ready; signing; failed | U3 | ✅ |
 
 ## Latest run
 

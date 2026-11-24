@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FileText, Loader2, Plus, UserRound, Users, FilePlus2 } from "lucide-react";
+import { signedIn } from "@/lib/session";
 import AppShell from "@/components/AppShell";
 import Heading from "@/components/Heading";
 import Panel from "@/components/Panel";
@@ -15,6 +16,7 @@ import Forget from "./Forget";
 
 // S-05 House (members + items)
 export default async function House(props: PageProps<"/house">) {
+  await signedIn(); // no session: off to Sign In (AC-3.5)
   const { state = "" } = (await props.searchParams) as { state?: string };
   const loading = state === "loading";
   const shownMembers = state === "no-members" ? [] : members;

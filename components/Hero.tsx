@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { loadKeys } from "@/lib/keys";
+import { loadKeys, type Saved } from "@/lib/keys";
 import Logo from "./Logo";
 import "./hero.css";
 
@@ -40,11 +40,15 @@ void main(){
 
 // Welcome screen (S-01): sample 02, the Today / After Q-Day switch with the fog and the house.
 // Returning = keys already in this browser (their name comes from there).
-export default function Hero() {
+export default function Hero({ signedIn }: { signedIn: boolean }) {
   const root = useRef<HTMLElement>(null);
-  const [name, setName] = useState<string>();
-  useEffect(() => setName(loadKeys()?.name), []);
-  const returning = name !== undefined;
+  const [saved, setSaved] = useState<Saved | null>(null);
+  useEffect(() => setSaved(loadKeys()), []);
+  // The next step for this browser: make keys, open the house, sign in again, or register the padlock.
+  const next = !saved ? { href: "/keys", label: "Make Your Keys" }
+    : signedIn ? { href: "/house", label: "Open My House", line: "You are signed in.", link: "Open Your House" }
+    : saved.signedInBefore ? { href: "/sign-in", label: "Sign In", line: "Your keys are in this browser.", link: "Next: Sign In" }
+    : { href: "/padlock", label: "Continue", line: "Your keys are in this browser.", link: "Next: Register Your Padlock" };
 
   useEffect(() => {
     const el = root.current!;
@@ -139,8 +143,8 @@ export default function Hero() {
         <header className="bar">
           <Link className="logo" href="/" aria-label="Lockhouse"><Logo />Lockhouse</Link>
           <div className="side">
-            <Link href="/sign-in">Sign In</Link>
-            <Link className="cta" href={returning ? "/padlock" : "/keys"}>{returning ? "Continue" : "Make Your Keys"}</Link>
+            {next.href !== "/house" && next.href !== "/sign-in" && <Link href="/sign-in">Sign In</Link>}
+            <Link className="cta" href={next.href}>{next.label}</Link>
           </div>
         </header>
         <h1><span className="l1">Your Family Papers</span><span><i>Stay Locked</i> <span className="y nw">After Q-Day</span></span></h1>
@@ -150,8 +154,8 @@ export default function Hero() {
             <button id="bn" aria-pressed="true"><b>After Q-Day</b><small>Still Locked</small></button>
           </div>
           <p className="cap">Keep your family&apos;s important papers in one house. Every copy is locked in your own browser <br />with <span className="nw">ML-KEM-1024</span>, so it stays shut even when the old locks break.</p>
-          {returning
-            ? <p className="cap">Welcome back, {name}. Your keys are in this browser. <Link href="/padlock" style={{ textDecoration: "underline" }}>Next: Register Your Padlock</Link></p>
+          {saved
+            ? <p className="cap">Welcome back, {saved.name}. {next.line} <Link href={next.href} style={{ textDecoration: "underline" }}>{next.link}</Link></p>
             : <p className="cap">Already have secret words? <Link href="/keys?restore" style={{ textDecoration: "underline" }}>Restore Your Keys</Link></p>}
         </div>
       </div>

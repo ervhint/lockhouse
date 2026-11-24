@@ -1,4 +1,5 @@
 import { Download, FileText, Lock } from "lucide-react";
+import { signedIn } from "@/lib/session";
 import AppShell from "@/components/AppShell";
 import Heading from "@/components/Heading";
 import Panel from "@/components/Panel";
@@ -10,6 +11,7 @@ import StatePicker from "@/components/StatePicker";
 
 // S-08 Item
 export default async function Item(props: PageProps<"/item/[id]">) {
+  await signedIn(); // no session: off to Sign In (AC-3.5)
   const { id } = await props.params;
   const { state = "" } = (await props.searchParams) as { state?: string };
   const base = `/item/${id}`;
