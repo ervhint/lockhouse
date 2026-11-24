@@ -11,5 +11,5 @@ const tones = {
 // The one status pill. Colour is never the only signal: every tone has its own icon.
 export default function Badge({ tone, children }: { tone: keyof typeof tones; children: ReactNode }) {
   const { cls, Icon } = tones[tone];
-  return <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${cls}`}><Icon className="size-3.5" aria-hidden />{children}</span>;
+  return <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${cls}`}><Icon className="size-3.5" aria-hidden />{children}</span>;
 }

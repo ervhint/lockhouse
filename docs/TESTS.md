@@ -89,6 +89,8 @@ Four profiles, all accounts set up first (keys, padlock, sign-in, house of three
 | 6 The drill | T-7.1, T-7.2, T-7.3 | ✅ |
 | 7 Still fine | T-7.5 | ✅ |
 
+**U7 checkpoint, 24 Nov (localhost, four Chrome profiles at 1366px):** all 7 steps passed. Ayu and Ratna restored through `/keys?restore`, signed in; Tari in the main profile; the Thief with no keys. (1) Ayu's House: Ayu, Tari, Ratna, each "Padlock in the Phone Book". (2) Ayu put in a made-up sample card for Tari and Ratna: "Locked on This Device · ML-KEM-1024 + X25519 · 3 Readers" on screen before the request; the request held only id, title, envelope, signature, readers. (3, 4) Tari and Ratna each opened it, "From Ayu · Signature Checked on QoreChain". (5) Ratna put in a note for Ayu; Ayu saw "From Ratna · Signature Checked on QoreChain". (6) All three pressed Give My Old Keys in their own windows; the Thief's Pretend Q-Day opened 3 old-lock samples, 4 of 4 Lockhouse copies stayed shut. (7) Tari's card still opened. The P7 run above is still to do: at 375px, and on the deployed app.
+
 ## Page states (each unit checks its own, at 1440px and 375px)
 
 | Screen | States | Unit | Result |
