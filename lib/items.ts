@@ -1,7 +1,8 @@
 // Putting in a paper (U5). The browser half: check the readers' cards, lock, sign. The checks the server shares.
 // The file or note never leaves the browser unlocked (INV-1); its name and type travel inside the envelope (AC-5.2).
-import { envelopeFromText, envelopeToText, seal, toHex, type RecipientCard } from "@qorechain/qoreseal";
+import { envelopeFromText, envelopeToText, open, seal, toHex, type RecipientCard } from "@qorechain/qoreseal";
 import { signMessage, type MessageSignature } from "@qorechain/qoresign";
+import { verifyMessageWithChain } from "@qorechain/qoresign/network";
 import type { keysFrom } from "./keys";
 import { checkCard } from "./padlock";
 import { CHAIN_ID, ITEM_PURPOSE } from "./settings";
@@ -54,6 +55,18 @@ export async function lockCopy(paper: Paper, cards: RecipientCard[], rest: strin
   const id = crypto.randomUUID();
   const envelope = envelopeToText(seal({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, recipients, plaintext: pack(paper), aad: enc.encode(id) }));
   return { id, envelope, readers: cards.map((c) => c.address) };
+}
+
+/** Open a paper (U6): check the sender's signature on chain, then open the envelope with my keys.
+ *  `paper` is null if it can't be opened; `proven` is false if the signature doesn't check out (AC-6.1, AC-6.4). */
+export async function openItem(keys: Keys, it: { id: string; houseId: string; sender: string; title: string; envelope: string; signature: MessageSignature }, rest: string) {
+  const proven = await verifyMessageWithChain({ rest, chainId: CHAIN_ID, signer: it.sender, data: await itemText(it.houseId, it.id, it.title, it.envelope), signature: it.signature })
+    .then(() => true, (e) => { if ((e as { code?: string }).code === "NETWORK_UNAVAILABLE") throw e; return false; });
+  let paper: Paper | null = null;
+  try {
+    paper = unpack(open({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, envelope: envelopeFromText(it.envelope), keys: keys.seal, aad: enc.encode(it.id) }));
+  } catch { /* changed or not for me: no preview */ }
+  return { proven, paper };
 }
 
 /** Lock and sign in one go (what the tests use; the Put In screen shows each step). */

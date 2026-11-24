@@ -4,13 +4,14 @@ import { envelopeFromText, envelopeToText, open, parseEnvelope, seal } from "@qo
 import { NextRequest } from "next/server";
 import { keysFrom, makeWords } from "../lib/keys";
 import { signCard } from "../lib/padlock";
-import { MAX_FILE, fileProblem, lockItem, pack, signItem, titleProblem, unpack } from "../lib/items";
+import { MAX_FILE, fileProblem, lockItem, openItem, pack, signItem, titleProblem, unpack } from "../lib/items";
 import { CHAIN_ID, ITEM_PURPOSE, REST } from "../lib/settings";
 import { db } from "../lib/db";
 import { houseIdOf } from "../lib/house";
 import { SESSION, seal as sealCookie } from "../lib/session";
 import { POST as putInRoute } from "../app/api/items/route";
 import { GET as houseRoute } from "../app/api/house/route";
+import { GET as getItemRoute } from "../app/api/items/[id]/route";
 
 const ayu = process.env.TEST_MNEMONIC_1; // padlock on testnet, Ayu's house holds Ayu and Tari on Staging
 const tari = process.env.TEST_MNEMONIC_2;
@@ -109,5 +110,50 @@ describe.runIf(ayu && tari)("POST /api/items (testnet + Staging)", () => {
     }
     expect((await putIn(stranger, item)).status).toBe(403);
     expect(await stored(item.id)).toBe(false);
+  }, 60_000);
+});
+
+const getItem = (by: string, id: string) =>
+  getItemRoute(new NextRequest(`${ORIGIN}/api/items/${id}`, { headers: { cookie: `${SESSION}=${sealCookie(SESSION, by, 600)}` } }), { params: Promise.resolve({ id }) } as never);
+
+describe.runIf(ayu && tari && ratna)("GET /api/items/[id] and openItem (testnet + Staging)", () => {
+  const [a, t, r] = ayu && tari && ratna ? [keysFrom(ayu), keysFrom(tari), keysFrom(ratna)] : [];
+  const file = { name: "note.txt", type: "text/plain", bytes: new TextEncoder().encode("hello family") };
+  const putFor = async (readers: ReturnType<typeof keysFrom>[]) => {
+    const houseId = (await houseIdOf(a!.address))!;
+    const item = await lockItem({ keys: a!, houseId, title: "Open Me", file, cards: readers.map(signCard), rest: REST });
+    madeItems.push(item.id);
+    expect((await putIn(a!.address, item)).status).toBe(200);
+    return item;
+  };
+  const rowFor = async (by: string, id: string) => { const row = await (await getItem(by, id)).json(); return { ...row, houseId: row.house_id }; };
+
+  // T-6.1 and T-6.2: two readers open the same copy, signature checked on chain; T-6.3: a member who is not a reader gets no copy
+  // T-6.7: someone in no house gets 403
+  it("opens for each reader from one row, and gives a non-reader no copy", async () => {
+    const item = await putFor([a!, t!]);
+    for (const k of [t!, a!]) {
+      const res = await openItem(k, await rowFor(k.address, item.id), REST);
+      expect(res.proven).toBe(true);
+      expect(res.paper).toEqual(file);
+    }
+    expect((await db().from("items").select("id").eq("id", item.id)).data).toHaveLength(1);
+    const notYou = await rowFor(r!.address, item.id);
+    expect(notYou).toMatchObject({ reader: false, senderName: "Ayu", title: "Open Me" });
+    expect(notYou.envelope).toBeUndefined();
+    expect(notYou.signature).toBeUndefined();
+    expect((await getItem(keysFrom(makeWords()).address, item.id)).status).toBe(403);
+    expect((await getItem(a!.address, randomUUID())).status).toBe(404);
+  }, 60_000);
+
+  // T-6.4: a changed title or a changed copy in the database is "not proven"
+  it("does not prove a paper whose title or copy was changed", async () => {
+    const item = await putFor([a!, t!]);
+    const row = await rowFor(t!.address, item.id);
+    expect((await openItem(t!, { ...row, title: "Changed Title" }, REST)).proven).toBe(false);
+    const other = envelopeToText(seal({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, recipients: [t!, a!].map((k) => ({ mlkemPublicKey: k.seal.mlkemPublicKey, x25519PublicKey: k.seal.x25519PublicKey })), plaintext: pack({ ...file, bytes: new Uint8Array([9]) }), aad: new TextEncoder().encode(item.id) }));
+    const swapped = await openItem(t!, { ...row, envelope: other }, REST);
+    expect(swapped.proven).toBe(false);
+    expect(swapped.paper?.bytes).toEqual(new Uint8Array([9])); // opens, but must show "Signature Not Proven" and no Download
   }, 60_000);
 });

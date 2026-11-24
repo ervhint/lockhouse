@@ -57,13 +57,13 @@
 | T-5.6 | AC-5.6 | e2e | go offline, put in, come back, Try Again | error toast, then saved without picking the file again | ✅ | Chrome: first send forced to fail in the page → "Could not save. Nothing was sent. Try again.", focus on Try Again; Try Again sent the same item id and saved, no file picked again |
 | T-5.7 | AC-5.7 | e2e | after saving; and a house with no papers | toast + link; paper on top of the list with title, sender, date, readers; No Papers state | ✅ | Chrome: toast "Put in. 2 readers can open it. See the House"; House lists both papers newest first with sender, date, reader count; No Papers Yet seen before. tests/items.test.ts checks the list too |
 | T-5.8 | AC-5.8 | timed e2e | lock 500 KB for 3 readers on the PC | under 2 s | ✅ | 500 KB for 3 readers: Chrome on the PC 1,018 ms including the 3 card checks on chain (NF-5 doesn't count them); the seal alone 19 ms in tests/items.test.ts |
-| T-6.1 | AC-6.1 | e2e golden | Member A opens the paper | it opens; "From {senderName} · Signature Checked on QoreChain" with the Owner's name | ⏭ | |
-| T-6.2 | AC-6.2 | e2e golden + DB check | Member B opens the same paper | it opens; the item has one row and one envelope | ⏭ | |
-| T-6.3 | AC-6.3 | e2e + integration | a member who isn't a reader opens it | "This Paper Is Not for You"; the envelope isn't sent | ⏭ | |
-| T-6.4 | AC-6.4 | integration + e2e | change the title (then the envelope) of a test row on Staging; open it | Signature Not Proven, blurred or no preview, no Download | ⏭ | |
-| T-6.5 | AC-6.5 | e2e | Download Paper | same file name and type as put in | ⏭ | |
-| T-6.6 | AC-6.6 | timed e2e | open 500 KB on the PC | Opening state; under 2 s | ⏭ | |
-| T-6.7 | AC-6.7 | integration | a non-member session asks for the item | 403 | ⏭ | |
+| T-6.1 | AC-6.1 | e2e golden | Member A opens the paper | it opens; "From {senderName} · Signature Checked on QoreChain" with the Owner's name | ✅ | 24 Nov, integration test + Chrome as Tari (note opened, "Signature Checked") |
+| T-6.2 | AC-6.2 | e2e golden + DB check | Member B opens the same paper | it opens; the item has one row and one envelope | ✅ | 24 Nov, integration test |
+| T-6.3 | AC-6.3 | e2e + integration | a member who isn't a reader opens it | "This Paper Is Not for You"; the envelope isn't sent | ✅ |  24 Nov, integration test; screen seen in Chrome as Ratna (not a reader) |
+| T-6.4 | AC-6.4 | integration + e2e | change the title (then the envelope) of a test row on Staging; open it | Signature Not Proven, blurred or no preview, no Download | ✅ | 24 Nov, integration test + Chrome (tampered copy: Not Proven, no Download; the file preview case was not run in Chrome) |
+| T-6.5 | AC-6.5 | e2e | Download Paper | same file name and type as put in | ✅ | 24 Nov, Chrome: Download gave paper-test.png (name kept); type kept is covered by the unpack test |
+| T-6.6 | AC-6.6 | timed e2e | open 500 KB on the PC | Opening state; under 2 s | ✅ | 24 Nov, Chrome: 500 KB for 3 readers shown 1.7 s after page start (load included) |
+| T-6.7 | AC-6.7 | integration | a non-member session asks for the item | 403 | ✅ | 24 Nov, integration test |
 | T-7.1 | AC-7.1 | e2e golden | Thief profile opens the Drill | every stored copy listed, no titles or names; "Simulation" visible | ⏭ | |
 | T-7.2 | AC-7.2 | e2e + network check | Member A → Give My Old Keys to the Drill (Simulation) → confirm | request holds only the old-lock copy and the X25519 secret key | ⏭ | |
 | T-7.3 | AC-7.3 | e2e golden | Thief → Pretend Q-Day | old-lock copy opens and shows the drill sample; every Lockhouse copy stays shut with the reason | ⏭ | |

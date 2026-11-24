@@ -24,13 +24,15 @@ export default function PutInForm() {
   const router = useRouter();
   const titleField = useRef<HTMLInputElement>(null);
   const fileField = useRef<HTMLInputElement>(null);
+  const noteField = useRef<HTMLTextAreaElement>(null);
+  const [kind, setKind] = useState<"file" | "note">("file");
   const [house, setHouse] = useState<House | null>();
   const [keys, setKeys] = useState<ReturnType<typeof keysFrom> | null>();
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [note, setNote] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
-  const [errors, setErrors] = useState<{ title?: string; file?: string; lock?: string }>({});
+  const [errors, setErrors] = useState<{ title?: string; file?: string; note?: string; lock?: string }>({});
   const [step, setStep] = useState<Step>("ready");
   const [locked, setLocked] = useState(0); // readers in the locked copy, once it is locked
   const [failed, setFailed] = useState<{ item: Item; message: string; round: number } | null>(null);
@@ -63,13 +65,13 @@ export default function PutInForm() {
     e.preventDefault();
     const bad = {
       title: titleProblem(title) ?? undefined,
-      file: file ? fileProblem(file.size) ?? undefined
-        : note.trim() ? undefined : "Choose a file or write a note.",
+      file: kind === "file" ? (file ? fileProblem(file.size) ?? undefined : "Choose a file.") : undefined,
+      note: kind === "note" && !note.trim() ? "Write a note." : undefined,
     };
-    if (file && note.trim()) bad.file = "Put in one at a time: remove the file or clear the note.";
     setErrors(bad);
     if (bad.title) return titleField.current?.focus();
     if (bad.file) return fileField.current?.focus();
+    if (bad.note) return noteField.current?.focus();
 
     const me = keys!.address;
     const readers = house!.members.filter((m) => m.address === me || picked.includes(m.address));
@@ -78,7 +80,7 @@ export default function PutInForm() {
     await nextFrame();
     let item: Item;
     try {
-      const paper = file ? { name: file.name, type: file.type || "application/octet-stream", bytes: new Uint8Array(await file.arrayBuffer()) }
+      const paper = kind === "file" ? { name: file!.name, type: file!.type || "application/octet-stream", bytes: new Uint8Array(await file!.arrayBuffer()) }
         : { ...NOTE, bytes: new TextEncoder().encode(note) };
       performance.mark("lock-start");
       const copy = await lockCopy(paper, readers.map((m) => m.card), `${location.origin}/api/chain`);
@@ -117,12 +119,21 @@ export default function PutInForm() {
         <form key={round} onSubmit={submit} noValidate className="flex flex-col gap-6">
           <Input ref={titleField} label="Title" hint="House members see the title. Only the readers you pick can open the paper." maxLength={120} autoComplete="off"
             value={title} onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)} error={errors.title} disabled={busy} />
-          <div className="flex flex-col gap-4">
-            <Input ref={fileField} label="Choose a File" type="file" accept="image/*,application/pdf" hint="A photo or PDF, up to 2 MB." disabled={busy} error={errors.file}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0] ?? null)} />
-            <Input multiline label="Or Write a Note" placeholder="Write anything you want to keep private" disabled={busy}
-              value={note} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNote(e.target.value)} />
-          </div>
+          <fieldset className="flex flex-col gap-2" disabled={busy}>
+            <legend className="mb-1 text-sm font-medium">What Are You Putting In?</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {([["file", "A File"], ["note", "A Note"]] as const).map(([k, label]) => (
+                <Checkbox key={k} radio name="kind" value={k} checked={kind === k} onChange={() => { setKind(k); setFile(null); setNote(""); setErrors((e) => ({ ...e, file: undefined, note: undefined })); }}>
+                  <span className="font-medium">{label}</span>
+                </Checkbox>
+              ))}
+            </div>
+          </fieldset>
+          {kind === "file"
+            ? <Input ref={fileField} label="Choose a File" type="file" accept="image/*,application/pdf" hint="A photo or PDF, up to 2 MB." disabled={busy} error={errors.file}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0] ?? null)} />
+            : <Input ref={noteField} multiline label="Your Note" placeholder="Write anything you want to keep private" disabled={busy} error={errors.note}
+                value={note} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNote(e.target.value)} />}
           <fieldset className="flex flex-col gap-2" disabled={busy}>
             <legend className="mb-1 text-sm font-medium">Who Can Open It</legend>
             {house.members.map((m) => {
