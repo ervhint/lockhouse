@@ -1,7 +1,7 @@
 # PROGRESS
 Hackathon: QoreChain Build Before Q-Day · Deadline: 2026-12-03 06:59 WIB (Laras's target: build done end of 2026-11-26) · Track: web3 (Diana testnet, no contract)
 Workflow: HACKATHON-WORKFLOW-V16.md (from 2026-11-23, end of lockhouse-03; same phases and gates as V15, plus rule 27: values are {placeholders}, examples never become copy)
-Phase: P6 Build, U2 built (not committed) · Last gate passed: **G5** (23 Nov; Laras kept all four picks in PLAN §6) · Next: Laras OKs the U2 commit; then **U3** in a new chat (Opus 5.5 · high) · Waiting for user: yes (commit) · P5 written on Opus 5.5 · high (Laras's choice)
+Phase: P6 Build, U2 committed · Last gate passed: **G5** (23 Nov; Laras kept all four picks in PLAN §6) · Next: **U3** in a new chat (Opus 5.5 · high) · Waiting for user: no · P5 written on Opus 5.5 · high (Laras's choice)
 Golden path: docs/PLAN.md §1.2 · Units: U0 → U1 → U2 → U3 → U4 → U5 → U6 → U7 (Coulds U8–U10 if time)     App: localhost until P7
 Accounts: GitHub https://github.com/ervhint/lockhouse (public, empty, created 2026-11-23) · Supabase org `ervhint` · Staging ref `egtxrdfhmtdiujdiywkm` · Prod ref `htghbmdautdpgzalysko` (untouched until P7) · Vercel team `ervhint`, project `lockhouse-qorechain` (created 2026-11-23, no deploy until P7)
 Could, if time allows: recovery key (Laras, 2026-11-23).
@@ -11,7 +11,7 @@ Laras (23 Nov): P2 starts in a new chat, after P1 is clear.
 | --- | --- | --- | --- | --- |
 | A Setup | U0 skeleton, tests, architecture | committed | T-0.1–0.6 ✅ | commit d7883f8, GitHub Actions ✅ (28s). All 3 test accounts funded with 100 test QOR each (checked 23 Nov). Secrets set 23 Nov. |
 | B Keys, padlock, sign-in | U1 make/backup/restore/forget keys | committed | T-1.1–1.7 ✅ (T-1.7 sign-out waits for U3) | commit b67ef29, GitHub Actions ✅. Checked at 1366px and 375px |
-| B Keys, padlock, sign-in | U2 register padlock (testnet) | built, not committed | T-2.2–2.5, 2.7, 2.8 ✅; T-2.1 and T-2.6 part ✅ (funding a fresh account and a forced refusal not run in Chrome) | Test accounts 1 and 2 registered on testnet. Checked at 1366px and 375px |
+| B Keys, padlock, sign-in | U2 register padlock (testnet) | committed | T-2.2–2.5, 2.7, 2.8 ✅; T-2.1 and T-2.6 part ✅ (funding a fresh account and a forced refusal not run in Chrome) | commit f97ce17, GitHub Actions ✅. Test accounts 1 and 2 registered on testnet. Checked at 1366px and 375px |
 | B Keys, padlock, sign-in | U3 Sign In With QoreChain | todo | T-3.1–3.7 ⏭ | Opus 5.5 · high |
 | C The house | U4 members + Add Member | todo | T-4.1–4.9 ⏭ | Opus 5.5 · high |
 | D Put in and open | U5 gate + paper list | todo | T-5.1–5.8 ⏭ | Opus 5.5 · medium |
