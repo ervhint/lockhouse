@@ -15,12 +15,12 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/items/[id]">
 
   const { id } = await ctx.params;
   if (!UUID.test(id)) return Response.json({ error: "No such paper." }, { status: 404 });
-  const { data, error } = await db().from("items").select("id, house_id, sender, title, envelope, signature, readers, created_at, people(name)").eq("id", id).eq("house_id", house).maybeSingle();
+  const { data, error } = await db().from("items").select("id, house_id, sender, title, envelope, signature, readers, stamp, created_at, people(name)").eq("id", id).eq("house_id", house).maybeSingle();
   if (error) throw error;
   if (!data) return Response.json({ error: "No such paper." }, { status: 404 });
 
-  const { envelope, signature, readers, people, ...rest } = data as typeof data & { people: { name: string } };
+  const { envelope, signature, readers, stamp, people, ...rest } = data as typeof data & { people: { name: string } };
   const reader = readers.includes(me);
   // fromMe: a sender is always a reader (D-14), so "from me but not for me" can only be a fake (AC-8.1)
-  return Response.json({ ...rest, senderName: people.name, readerCount: readers.length, reader, fromMe: data.sender === me, ...(reader && { envelope, signature }) });
+  return Response.json({ ...rest, senderName: people.name, readerCount: readers.length, reader, fromMe: data.sender === me, ...(reader && { envelope, signature, stamp }) });
 }

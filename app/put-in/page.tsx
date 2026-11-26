@@ -8,7 +8,7 @@ export default async function PutIn() {
   await signedIn(); // no session: off to Sign In (AC-3.5)
   return (
     <AppShell>
-      <Heading title="Put In a Paper">Pick a file or write a note, then pick who can open it. It is locked on this device first. Then it is signed with your key.</Heading>
+      <Heading title="Put In a Paper">Pick a file or write a note, then pick who can open it. It is locked on this device first. Then it is signed with your key and stamped on QoreChain.</Heading>
       <PutInForm />
     </AppShell>
   );

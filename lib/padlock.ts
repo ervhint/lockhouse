@@ -30,18 +30,20 @@ export async function chainStatus(keys: Keys, rest: string) {
 }
 
 /** Sign and send step 1 (signing key, classical-only signature) or step 2 (padlock, hybrid). Returns the tx hash. */
-export async function send(step: 1 | 2, keys: Keys, rest: string) {
+export const send = (step: 1 | 2, keys: Keys, rest: string) => sendTx(keys, rest, step === 1
+  ? buildRegisterPqKeyMessage({ chainId: CHAIN_ID, account: keys.address, pqKey: keys.pq, classicalPublicKey: keys.classical.publicKey })
+  : buildRegisterKemKeyMessage({ sender: keys.address, mlkemPublicKey: keys.seal.mlkemPublicKey }), step === 2);
+
+/** Sign and send one message, hybrid or classical-only (D-04), with an optional memo (U11). Returns the tx hash. */
+export async function sendTx(keys: Keys, rest: string, msg: AnyMessage, hybrid: boolean, memo = "") {
   const res = await fetch(`${rest}/cosmos/auth/v1beta1/account_info/${keys.address}`);
   if (!res.ok) throw new Error("QoreChain doesn't know your account yet. Get test QOR from the faucet first.");
   const { info } = await res.json();
   const [accountNumber, sequence] = [BigInt(info.account_number), BigInt(info.sequence ?? "0")];
-  const msg: AnyMessage = step === 1
-    ? buildRegisterPqKeyMessage({ chainId: CHAIN_ID, account: keys.address, pqKey: keys.pq, classicalPublicKey: keys.classical.publicKey })
-    : buildRegisterKemKeyMessage({ sender: keys.address, mlkemPublicKey: keys.seal.mlkemPublicKey });
-  const bodyBytes = TxBody.encode(TxBody.fromPartial({ messages: [msg] })).finish();
+  const bodyBytes = TxBody.encode(TxBody.fromPartial({ messages: [msg], memo })).finish();
   const sign = (gas: bigint, signBytesVersion?: SignBytesVersion) => signHybrid({
     chainId: CHAIN_ID, accountNumber, bodyBytes, classicalKey: keys.classical, pqKey: keys.pq, signBytesVersion,
-    mode: step === 1 ? "classicalOnly" : "hybrid",
+    mode: hybrid ? "hybrid" : "classicalOnly",
     authInfoBytes: makeAuthInfoBytes(
       [{ pubkey: encodePubkey(encodeSecp256k1Pubkey(keys.classical.publicKey)), sequence }],
       [{ denom: "uqor", amount: ((gas + 9n) / 10n).toString() }], // 0.1 uqor per gas
@@ -49,9 +51,9 @@ export async function send(step: 1 | 2, keys: Keys, rest: string) {
     ),
   }).txBytes;
   const gas = (await simulateTx({ rest, txBytes: sign(600_000n) })).suggestedGasLimit;
-  const sent = step === 1
-    ? await broadcastTx({ rest, txBytes: sign(gas) })
-    : await submitWithSignBytesFallback({ rest, chainId: CHAIN_ID, sign: (v) => sign(gas, v) });
+  const sent = hybrid
+    ? await submitWithSignBytesFallback({ rest, chainId: CHAIN_ID, sign: (v) => sign(gas, v) })
+    : await broadcastTx({ rest, txBytes: sign(gas) });
   if (sent.code !== 0) throw refused(sent);
   return sent.txhash;
 }
@@ -89,8 +91,8 @@ const PADLOCK_REFUSALS: Record<number, string> = {
   254: "Your signing key must be in the Phone Book first. Finish Signature 1 of 2, then try again.",
 };
 
-/** Any failure in plain words (AC-2.6): our own text for known refusals, else the chain's or the kit's. */
-export function reason(err: unknown): string {
+/** Any failure in plain words (AC-2.6, AC-11.2): our own text for known refusals, else the chain's or the kit's. */
+export function reason(err: unknown, what = "the registration"): string {
   const e = err as Partial<Refusal> & { message?: string; details?: Partial<Refusal> };
   if ((e?.code as unknown) === "NETWORK_UNAVAILABLE") return "Can't reach QoreChain right now. Check your connection and try again.";
   const r = e?.details?.log !== undefined ? e.details : typeof e?.code === "number" ? e : undefined;
@@ -99,5 +101,5 @@ export function reason(err: unknown): string {
     if (/insufficient funds|insufficient fee/i.test(r.log ?? "")) return "Not enough test QOR for the network fee. Get some from the faucet, then try again.";
     return `QoreChain said: ${r.log}`;
   }
-  return e?.message || "Something stopped the registration. Try again.";
+  return e?.message || `Something stopped ${what}. Try again.`;
 }

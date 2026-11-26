@@ -6,10 +6,11 @@ import { verifyMessageWithChain } from "@qorechain/qoresign/network";
 import type { keysFrom } from "./keys";
 import { checkCard } from "./padlock";
 import { CHAIN_ID, ITEM_PURPOSE } from "./settings";
+import { checkStamp } from "./stamp";
 
 type Keys = ReturnType<typeof keysFrom>;
 export type Paper = { name: string; type: string; bytes: Uint8Array };
-export type Item = { id: string; title: string; envelope: string; signature: MessageSignature; readers: string[] };
+export type Item = { id: string; title: string; envelope: string; signature: MessageSignature; readers: string[]; stamp?: string };
 
 export const MAX_FILE = 2 * 1024 * 1024; // NF-4
 export const MAX_TITLE = 80;
@@ -67,16 +68,21 @@ export async function lockCopy(paper: Paper, cards: RecipientCard[], rest: strin
   return { id, envelope, readers: cards.map((c) => c.address) };
 }
 
-/** Open a paper (U6): check the sender's signature on chain, then open the envelope with my keys.
- *  `paper` is null if it can't be opened; `proven` is false if the signature doesn't check out (AC-6.1, AC-6.4). */
-export async function openItem(keys: { seal: SealKeyPair }, it: { id: string; houseId: string; sender: string; title: string; envelope: string; signature: MessageSignature }, rest: string) {
-  const proven = await verifyMessageWithChain({ rest, chainId: CHAIN_ID, signer: it.sender, data: await itemText(it.houseId, it.id, it.title, it.envelope), signature: it.signature })
-    .then(() => true, (e) => { if ((e as { code?: string }).code === "NETWORK_UNAVAILABLE") throw e; return false; });
+/** Open a paper (U6): check the sender's signature and the paper's stamp on chain, then open the envelope with my keys.
+ *  `paper` is null if it can't be opened; `proven` is false if the signature doesn't check out (AC-6.1, AC-6.4);
+ *  `stamp` is null if it has none, and its `at` is null if the stamp doesn't prove this paper (AC-11.4, AC-11.5). */
+export async function openItem(keys: { seal: SealKeyPair }, it: { id: string; houseId: string; sender: string; title: string; envelope: string; signature: MessageSignature; stamp?: string | null }, rest: string) {
+  const text = await itemText(it.houseId, it.id, it.title, it.envelope);
+  const [proven, at] = await Promise.all([
+    verifyMessageWithChain({ rest, chainId: CHAIN_ID, signer: it.sender, data: text, signature: it.signature })
+      .then(() => true, (e) => { if ((e as { code?: string }).code === "NETWORK_UNAVAILABLE") throw e; return false; }),
+    it.stamp ? checkStamp(it.stamp, it.sender, text, rest) : null,
+  ]);
   let paper: Paper | null = null;
   try {
     paper = unpack(open({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, envelope: envelopeFromText(it.envelope), keys: keys.seal, aad: enc.encode(it.id) }));
   } catch { /* changed or not for me: no preview */ }
-  return { proven, paper };
+  return { proven, paper, stamp: it.stamp ? { hash: it.stamp, at } : null };
 }
 
 /** Lock and sign in one go (what the tests use; the Put In screen shows each step). */

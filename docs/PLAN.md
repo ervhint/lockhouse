@@ -337,6 +337,8 @@ Acceptance:
 - AC-11.6 Given Open With Recovery Words, then each paper shows the same stamp result.
 Tests: T-11.1 (integration, testnet: stamp, then check; changed text, another signer and an unknown hash don't match), T-11.2 (integration, testnet + Staging: the route stores a good stamp, refuses another paper's stamp and a malformed one, stores nothing), T-11.3 (integration: an account with no test QOR gets the reason in plain words), T-11.4 (e2e golden: Put In, then the paper shows its stamp and explorer link), T-11.5 (e2e: Not Stamped on an old paper and the fake drop-in; Stamp Doesn't Match after changing a row on Staging; Open With Recovery Words)
 
+Built 26 Nov: `lib/stamp.ts` (`stamp`, `checkStamp`), sent through the padlock's `sendTx` (one transaction recipe, D-04). On testnet a stamp is committed in about 4 s and costs about 0.0174 test QOR in fees plus the 1 uqor. The explorer shows the memo and "Signature security: quantum-safe, verified on-chain, ML-DSA-87". Badge got an `href` option (a link to the explorer), now also used by the House padlock badges.
+
 **Won't in this build:** group keys (US-19), a house picker (being in several houses).
 
 ## 5. Decisions log

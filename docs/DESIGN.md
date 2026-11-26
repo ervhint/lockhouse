@@ -27,6 +27,7 @@
 | US-17 | Could | | A fake "from Ratna" item refused on screen |
 | US-18 | Could | | Remove someone from the house |
 | US-19 | Could | | Group keys, so a removed member can't read new items |
+| US-20 | Should (added in P7, Laras, 26 Nov) | steps 2–3 | Every paper is stamped on QoreChain when it is put in, so anyone in the house can prove when it was put in and that it hasn't changed since |
 
 ## Screen inventory
 
@@ -38,12 +39,12 @@
 | S-04 | Register Padlock | US-03, US-07 | not enough test QOR (faucet link); sign 1 of 2; sign 2 of 2; I said no to signing (nothing sent, try again); pending; confirmed; failed (explorer link, retry) |
 | S-05 | House (members + items) | US-05, US-06, US-11, US-18 | loading; no other members yet; no items yet; "list updating…"; menu: Sign Out, Forget Keys on This Device (asks first: words needed to come back); Remove {memberName} sheet (`?remove={qorAddress}`: asks first, says what they opened stays on their device; removing, failed, removed toast) |
 | S-06 | Add Member | US-06 | checking card; no padlock in phone book; bad card; added |
-| S-07 | Gate (Put In) | US-08, US-09, US-10 | choose file or note; pick readers; too big; locking; signing; saved; save failed (nothing sent) |
-| S-08 | Item | US-12, US-13, US-17 | opening; opened + "Signature Checked"; not for you; signature not proven |
+| S-07 | Gate (Put In) | US-08, US-09, US-10, US-20 | choose file or note; pick readers; too big; locking; signing; stamping on QoreChain (U11); stamp failed (nothing saved, reason in plain words); saved ("Put in and stamped on QoreChain"); save failed (nothing sent) |
+| S-08 | Item | US-12, US-13, US-17, US-20 | opening; opened + "Signature Checked"; not for you; signature not proven. U11 stamp: "Stamped on QoreChain · {date}" (links to the explorer); "Not Stamped on QoreChain"; "Stamp Doesn't Match This Paper", each with one line saying what it means |
 | S-09 | Drill (Simulation) | US-14, US-15, US-17 | all stored copies listed; Pretend Q-Day running; result; A Fake Drop-In (members): making the fake paper, failed (no one else in the house, no connection), then S-08 shows Signature Not Proven |
 | S-10 | Sign In With QoreChain | US-04 | signing; rejected; failed |
 | S-11 | Make a Recovery Key (`/house/recovery`, U10) | US-16 | words shown once; tick "I wrote the recovery words on paper"; saving; failed (words stay on screen); already has one. House gets a Recovery Key panel (none yet / made by {memberName}) and a saved toast; Put In shows a note under Who Can Open It: the house's recovery key (made by {memberName}) can open it too (not a row: it is not a person; Laras, 25 Nov) |
-| S-12 | Open With Recovery Words (`/recover`, U10, no sign-in) | US-16 | wrong words; no papers for these words; list; opening; the paper (S-08's view); can't reach QoreChain. Linked from Restore Your Keys and the House panel |
+| S-12 | Open With Recovery Words (`/recover`, U10, no sign-in) | US-16, US-20 | wrong words; no papers for these words; list; opening; the paper (S-08's view, with its stamp); can't reach QoreChain. Linked from Restore Your Keys and the House panel |
 
 **Web3 states covered** (workflow, Web3 track): no wallet connect (keys live in the page, not in QoreX), so "connect" is replaced by make/restore keys and sign-in. Wrong network → the app only talks to `qorechain-diana`. Signature request → S-04 says what each of the two signatures does. Insufficient funds → S-04 faucet branch. Submitted → pending → confirmed / failed with explorer link → S-04. Stale data → S-05 "list updating…".
 

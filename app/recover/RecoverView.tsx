@@ -9,10 +9,10 @@ import Input from "@/components/Input";
 import Button from "@/components/Button";
 import PaperView from "@/components/PaperView";
 import { checkWords } from "@/lib/keys";
-import { openItem, type Paper } from "@/lib/items";
+import { openItem } from "@/lib/items";
 import { lookupOf } from "@/lib/recovery";
 
-type Row = { id: string; house_id: string; sender: string; senderName: string; title: string; created_at: string; envelope: string; signature: MessageSignature };
+type Row = { id: string; house_id: string; sender: string; senderName: string; title: string; created_at: string; envelope: string; signature: MessageSignature; stamp: string | null };
 const when = (d: string) => new Date(d).toLocaleDateString(undefined, { dateStyle: "medium" });
 
 // The words stay in this page's memory: nothing is saved in this browser, and only their lookup is sent (INV-1).
@@ -21,7 +21,7 @@ export default function RecoverView() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [found, setFound] = useState<{ seal: SealKeyPair; items: Row[] } | null>(null);
-  const [opened, setOpened] = useState<{ row: Row; proven: boolean; paper: Paper | null } | null>(null);
+  const [opened, setOpened] = useState<{ row: Row } & Awaited<ReturnType<typeof openItem>> | null>(null);
   const [opening, setOpening] = useState("");
 
   async function find(e: FormEvent<HTMLFormElement>) {
@@ -46,7 +46,7 @@ export default function RecoverView() {
     try {
       setOpened({ row, ...await openItem({ seal: found!.seal }, { ...row, houseId: row.house_id }, `${location.origin}/api/chain`) });
     } catch {
-      setError("Can't reach QoreChain to check the signature. Nothing was shown. Try again.");
+      setError("Can't reach QoreChain to check the signature and stamp. Nothing was shown. Try again.");
       list.current?.focus(); // the button that was pressed is off while opening
     }
     setOpening("");
@@ -58,7 +58,7 @@ export default function RecoverView() {
     else if (found) list.current?.focus();
   }, [found, opened]);
 
-  if (opened) return <PaperView title={opened.row.title} senderName={opened.row.senderName} date={opened.row.created_at} proven={opened.proven} paper={opened.paper}
+  if (opened) return <PaperView title={opened.row.title} senderName={opened.row.senderName} date={opened.row.created_at} proven={opened.proven} stamp={opened.stamp} paper={opened.paper}
     back={<Button variant="secondary" onClick={() => setOpened(null)}>Back to the List</Button>} />;
 
   if (found) return (

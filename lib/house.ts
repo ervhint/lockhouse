@@ -27,24 +27,34 @@ export async function houseIdOf(address: string): Promise<string | null> {
   return data?.house_id ?? null;
 }
 
-/** What the House and Put In screens need (S-05, S-07): me first, then the others in the order they joined, with the cards
- *  that lock papers to them (cards are public); papers newest first, with no locked copy; the recovery key's
+export const PAGE = 20; // the Papers page loads this many at a time
+
+/** A house's papers newest first, `size` of them from `from`, with no locked copy, and how many it has. */
+export async function papersOf(houseId: string, from: number, size: number) {
+  const { data, error, count } = await db().from("items").select("id, title, readers, stamp, created_at, people(name)", { count: "exact" })
+    .eq("house_id", houseId).order("created_at", { ascending: false }).order("id").range(from, from + size - 1);
+  if (error) throw error;
+  // `stamped`: it has a stamp (U11); the paper's own page checks it on chain
+  const items = (data as unknown as { id: string; title: string; readers: string[]; stamp: string | null; created_at: string; people: { name: string } }[])
+    .map((r) => ({ id: r.id, title: r.title, sender: r.people.name, date: r.created_at, readers: r.readers.length, stamped: !!r.stamp }));
+  return { items, total: count ?? 0 };
+}
+
+/** What the House and Put In screens need (S-05, S-07): me first, then the others A–Z by name, with the cards
+ *  that lock papers to them (cards are public); the 5 newest papers and how many there are; the recovery key's
  *  public half, if the house has one (U10; never its lookup). Null if in no house. */
 export async function houseOf(address: string) {
   const id = await houseIdOf(address);
   if (!id) return null;
-  const [m, i, h] = await Promise.all([
-    db().from("house_members").select("address, people!house_members_address_fkey(name, card)").eq("house_id", id).order("added_at"),
-    db().from("items").select("id, title, readers, created_at, people(name)").eq("house_id", id).order("created_at", { ascending: false }),
+  const [m, papers, h] = await Promise.all([
+    db().from("house_members").select("address, people!house_members_address_fkey(name, card)").eq("house_id", id),
+    papersOf(id, 0, 5),
     db().from("houses").select("recovery").eq("id", id).single(),
   ]);
   if (m.error) throw m.error;
-  if (i.error) throw i.error;
   if (h.error) throw h.error;
   const members = (m.data as unknown as { address: string; people: { name: string; card: RecipientCard } }[])
     .map((r) => ({ name: r.people.name, address: r.address, card: r.people.card }))
-    .sort((a, b) => Number(b.address === address) - Number(a.address === address)); // me first, then in the order they joined
-  const items = (i.data as unknown as { id: string; title: string; readers: string[]; created_at: string; people: { name: string } }[])
-    .map((r) => ({ id: r.id, title: r.title, sender: r.people.name, date: r.created_at, readers: r.readers.length }));
-  return { id, members, items, recovery: h.data.recovery as Recovery | null };
+    .sort((a, b) => Number(b.address === address) - Number(a.address === address) || a.name.localeCompare(b.name)); // me first, then A–Z
+  return { id, members, items: papers.items, paperCount: papers.total, recovery: h.data.recovery as Recovery | null };
 }

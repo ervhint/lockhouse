@@ -4,13 +4,14 @@ import { envelopeFromText, envelopeToText, open, parseEnvelope, seal } from "@qo
 import { NextRequest } from "next/server";
 import { keysFrom, makeWords } from "../lib/keys";
 import { signCard } from "../lib/padlock";
-import { MAX_FILE, fileProblem, lockItem, openItem, pack, signItem, titleProblem, unpack } from "../lib/items";
+import { MAX_FILE, fileProblem, itemText, lockItem, openItem, pack, signItem, titleProblem, unpack } from "../lib/items";
+import { stamp } from "../lib/stamp";
 import { CHAIN_ID, ITEM_PURPOSE, REST } from "../lib/settings";
 import { db } from "../lib/db";
 import { houseIdOf, houseOf } from "../lib/house";
 import { checkRecovery } from "../lib/recovery";
 import { SESSION, seal as sealCookie } from "../lib/session";
-import { POST as putInRoute } from "../app/api/items/route";
+import { GET as listRoute, POST as putInRoute } from "../app/api/items/route";
 import { GET as houseRoute } from "../app/api/house/route";
 import { GET as getItemRoute } from "../app/api/items/[id]/route";
 
@@ -96,6 +97,17 @@ describe.runIf(ayu && tari)("POST /api/items (testnet + Staging)", () => {
     expect(await stored(item.id)).toBe(true);
     const house = await (await houseRoute(new NextRequest(`${ORIGIN}/api/house`, { headers: { cookie: `${SESSION}=${sealCookie(SESSION, t!.address, 600)}` } }))).json();
     expect(house.items[0]).toMatchObject({ id: item.id, title: "Test Paper", sender: "Ayu", readers: 2 });
+
+    // the House shows the 5 newest and how many there are; the Papers page loads the rest 20 at a time, newest first
+    expect(house.items.length).toBeLessThanOrEqual(5);
+    const page = async (from: string, by = t!.address) => listRoute(new NextRequest(`${ORIGIN}/api/items?from=${from}`, { headers: { cookie: `${SESSION}=${sealCookie(SESSION, by, 600)}` } }));
+    const first = await (await page("0")).json();
+    expect(first.total).toBe(house.paperCount);
+    expect(first.items[0].id).toBe(item.id);
+    expect(first.items.length).toBe(Math.min(20, first.total));
+    expect((await (await page(String(first.total))).json()).items).toEqual([]);
+    expect((await page("-1")).status).toBe(400);
+    expect((await page("0", keysFrom(makeWords()).address)).status).toBe(403);
   }, 60_000);
 
   // T-5.3 a non-member reader, a broken envelope, a wrong entry count, a bad signature: 400, nothing stored.
@@ -117,6 +129,25 @@ describe.runIf(ayu && tari)("POST /api/items (testnet + Staging)", () => {
     expect((await putIn(stranger, item)).status).toBe(403);
     expect(await stored(item.id)).toBe(false);
   }, 60_000);
+
+  // T-11.2 a put-in may carry its stamp: stored only if the stamp proves this paper (INV-6), and readers get it back
+  it("stores a stamp that proves the paper, refuses one that doesn't", async () => {
+    const [{ houseId, item }, other] = [await good("Stamped Paper"), await good("Other Paper")];
+    const hash = await stamp(a!, await itemText(houseId, item.id, item.title, item.envelope), REST);
+    for (const body of [{ ...item, stamp: "not a hash" }, { ...other.item, stamp: hash }]) {
+      const res = await putIn(a!.address, body);
+      expect(res.status, JSON.stringify(await res.json())).toBe(400);
+    }
+    expect(await stored(other.item.id)).toBe(false);
+    expect((await putIn(a!.address, { ...item, stamp: hash })).status).toBe(200);
+    const row = { ...await (await getItem(t!.address, item.id)).json(), houseId };
+    expect(row.stamp).toBe(hash);
+
+    // T-11.4 (reader half) the reader's own check proves it; T-11.5 a changed title doesn't match, no stamp is Not Stamped
+    expect((await openItem(t!, row, REST)).stamp).toEqual({ hash, at: expect.any(Date) });
+    expect((await openItem(t!, { ...row, title: "Changed Title" }, REST)).stamp).toEqual({ hash, at: null });
+    expect((await openItem(t!, { ...row, stamp: null }, REST)).stamp).toBeNull();
+  }, 120_000);
 });
 
 const getItem = (by: string, id: string) =>

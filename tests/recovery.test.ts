@@ -31,7 +31,7 @@ describe.runIf(ayu && tari)("the recovery key (testnet)", () => {
     const item = await lockItem({ keys: a!, houseId, title: "Kept Safe", file, cards: [signCard(a!)], extra: [extra], rest: REST });
     expect(parseEnvelope(envelopeFromText(item.envelope)).entries).toHaveLength(2);
     const opened = await openItem({ seal: deriveSealKeys({ mnemonic: words }) }, { ...item, houseId, sender: a!.address }, REST);
-    expect(opened).toEqual({ proven: true, paper: file });
+    expect(opened).toEqual({ proven: true, paper: file, stamp: null }); // not stamped (U11): put in without one
   }, 60_000);
 
   // A hacked server can't slip in its own recovery key: it must be signed by a member, for this house
@@ -94,6 +94,6 @@ describe.runIf(ayu && tari)("recovery routes (testnet + Staging)", () => {
     const row = found.items[0];
     expect(row).toMatchObject({ id: item.id, title: "Kept Safe", senderName: "Ayu" });
     const opened = await openItem({ seal: deriveSealKeys({ mnemonic: words }) }, { ...row, houseId: row.house_id }, REST);
-    expect(opened).toEqual({ proven: true, paper: file });
+    expect(opened).toEqual({ proven: true, paper: file, stamp: null }); // not stamped (U11): put in without one
   }, 90_000);
 });

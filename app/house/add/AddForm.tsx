@@ -43,7 +43,7 @@ export default function AddForm() {
         <AddressChip address={added.address} />
       </div>
       <p className="text-muted">{added.name} is in your house now.</p>
-      <Button href="/house" full>Back to the House</Button>
+      <Button href="/members" full>Back to Members</Button>
     </div>
   );
 

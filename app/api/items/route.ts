@@ -2,15 +2,28 @@ import type { NextRequest } from "next/server";
 import { envelopeFromText, parseEnvelope } from "@qorechain/qoreseal";
 import { verifyMessageWithChain } from "@qorechain/qoresign/network";
 import { db } from "@/lib/db";
-import { houseIdOf } from "@/lib/house";
+import { PAGE, houseIdOf, papersOf } from "@/lib/house";
 import { MAX_FILE, itemText, titleProblem } from "@/lib/items";
 import { SESSION, unseal } from "@/lib/session";
 import { CHAIN_ID, REST } from "@/lib/settings";
+import { checkStamp } from "@/lib/stamp";
 
 const refuse = (error: string, status = 400) => Response.json({ error }, { status });
-const FIELDS = ["envelope", "id", "readers", "signature", "title"];
+const FIELDS = ["envelope", "id", "readers", "signature", "title"]; // plus an optional stamp (U11)
+const offline = (e: unknown) => (e as { code?: string }).code === "NETWORK_UNAVAILABLE";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const NAME_ROOM = 1024; // the name and type line inside the envelope, on top of the file
+
+// The Papers page: my house's papers newest first, PAGE at a time from `?from=`, and how many there are. Members only.
+export async function GET(req: NextRequest) {
+  const me = unseal(SESSION, req.cookies.get(SESSION)?.value);
+  if (!me) return refuse("Sign in first.", 401);
+  const house = await houseIdOf(me);
+  if (!house) return refuse("You are not in a house.", 403);
+  const from = Number(req.nextUrl.searchParams.get("from") ?? 0);
+  if (!Number.isInteger(from) || from < 0) return refuse("Ask for papers from 0 or more.");
+  return Response.json(await papersOf(house, from, PAGE));
+}
 
 // Put In (S-07): store a locked copy only if every check holds; otherwise 400 and nothing stored (AC-5.2, AC-5.3).
 export async function POST(req: NextRequest) {
@@ -20,9 +33,11 @@ export async function POST(req: NextRequest) {
   if (!house) return refuse("You are not in a house.", 403);
 
   const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object" || Object.keys(body).sort().join() !== FIELDS.join()) return refuse("Send only the item id, title, locked copy, signature and readers.");
-  const { id, title, envelope, signature, readers } = body;
+  if (!body || typeof body !== "object" || Object.keys(body).filter((k) => k !== "stamp").sort().join() !== FIELDS.join())
+    return refuse("Send only the item id, title, locked copy, signature, readers and stamp.");
+  const { id, title, envelope, signature, readers, stamp = null } = body;
   if (typeof id !== "string" || !UUID.test(id)) return refuse("The item id is not valid.");
+  if (stamp !== null && (typeof stamp !== "string" || !/^[0-9A-F]{64}$/.test(stamp))) return refuse("The stamp must be a QoreChain transaction hash.");
   if (typeof title !== "string" || titleProblem(title) || title !== title.trim()) return refuse(titleProblem(String(title)) ?? "Give it a title with no spaces at the start or end.");
   if (!Array.isArray(readers) || !readers.includes(me) || new Set(readers).size !== readers.length || readers.some((r) => typeof r !== "string"))
     return refuse("Pick each reader once, and keep yourself as a reader.");
@@ -52,14 +67,21 @@ export async function POST(req: NextRequest) {
     return refuse("The locked copy can't be read.");
   }
 
+  const text = await itemText(house, id, title, envelope);
   try {
-    await verifyMessageWithChain({ rest: REST, chainId: CHAIN_ID, signer: me, data: await itemText(house, id, title, envelope), signature });
+    await verifyMessageWithChain({ rest: REST, chainId: CHAIN_ID, signer: me, data: text, signature });
   } catch (e) {
-    if ((e as { code?: string }).code === "NETWORK_UNAVAILABLE") return refuse("Can't reach QoreChain to check your signature. Nothing was saved. Try again.", 503);
+    if (offline(e)) return refuse("Can't reach QoreChain to check your signature. Nothing was saved. Try again.", 503);
     return refuse("Your signature doesn't match this paper. Nothing was saved.");
   }
+  try { // a stamp is stored only if it proves this paper, from me (AC-11.3, INV-6)
+    if (stamp && !await checkStamp(stamp, me, text, REST)) return refuse("This stamp on QoreChain is not for this paper. Nothing was saved. Put it in again.");
+  } catch (e) {
+    if (offline(e)) return refuse("Can't reach QoreChain to check the stamp. Nothing was saved. Try again.", 503);
+    throw e;
+  }
 
-  const { error: failed } = await db().from("items").insert({ id, house_id: house, sender: me, title, envelope, signature, readers, size, recovery });
+  const { error: failed } = await db().from("items").insert({ id, house_id: house, sender: me, title, envelope, signature, readers, size, recovery, stamp });
   if (failed) return failed.code === "23505" ? refuse("This paper is already saved.") : Promise.reject(failed);
   return Response.json({ id, readers: readers.length });
 }

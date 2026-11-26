@@ -13,15 +13,17 @@ import Panel from "@/components/Panel";
 import Skeleton from "@/components/Skeleton";
 import Toast from "@/components/Toast";
 import { keysFrom, loadKeys } from "@/lib/keys";
-import { NOTE, fileProblem, lockCopy, signItem, titleProblem, type Item } from "@/lib/items";
+import { NOTE, fileProblem, itemText, lockCopy, signItem, titleProblem, type Item } from "@/lib/items";
+import { reason } from "@/lib/padlock";
 import { checkRecovery, type Recovery } from "@/lib/recovery";
+import { stamp } from "@/lib/stamp";
 
 type House = { id: string; members: { name: string; address: string; card: RecipientCard }[]; recovery: Recovery | null };
-type Step = "ready" | "locking" | "signing" | "saving";
+type Step = "ready" | "locking" | "signing" | "stamping" | "saving";
 const SAVE_FAILED = "Could not save. Nothing was sent. Try again.";
 const nextFrame = () => new Promise((ok) => requestAnimationFrame(() => setTimeout(ok)));
 
-// S-07: check the readers' cards on chain, lock on this device, sign, and only then send (AC-5.1, AC-5.2).
+// S-07: check the readers' cards on chain, lock on this device, sign, stamp on QoreChain, and only then send (AC-5.1, AC-5.2, AC-11.1).
 export default function PutInForm() {
   const router = useRouter();
   const titleField = useRef<HTMLInputElement>(null);
@@ -104,6 +106,14 @@ export default function PutInForm() {
       setLocked(0);
       return setErrors({ lock: "A reader's signed card didn't check out on QoreChain, so nothing was locked or sent. Try again; if it keeps failing, ask them to sign in again to renew their card." });
     }
+    setStep("stamping");
+    try { // the stamp goes on chain before saving: if it fails, nothing is saved (AC-11.2, D-17)
+      item.stamp = await stamp(keys!, await itemText(house!.id, item.id, item.title, item.envelope), rest);
+    } catch (e) {
+      setStep("ready");
+      setLocked(0);
+      return setErrors({ lock: `Couldn't stamp it on QoreChain, so nothing was saved. ${reason(e, "the stamp")}` });
+    }
     await send(item);
   }
 
@@ -169,16 +179,17 @@ export default function PutInForm() {
             {step === "locking" && <Badge tone="wait">Locking on This Device…</Badge>}
             {locked > 0 && <Badge tone="ok">Locked on This Device · ML-KEM-1024 + X25519 · {locked} {locked === 1 ? "Reader" : "Readers"}{house.recovery && " + Recovery Key"}</Badge>}
             {step === "signing" && <Badge tone="wait">Signing With Your Key…</Badge>}
+            {step === "stamping" && <Badge tone="wait">Stamping on QoreChain…</Badge>}
             {step === "saving" && <Badge tone="wait">Saving the Locked Copy…</Badge>}
           </div>
           {errors.lock && <p role="alert" className="text-sm text-danger">{errors.lock}</p>}
           <Button type="submit" full loading={busy}>
-            {step === "locking" ? "Locking" : step === "signing" ? "Signing" : step === "saving" ? "Saving" : `Lock and Put In for ${count} ${count === 1 ? "Reader" : "Readers"}`}
+            {step === "locking" ? "Locking" : step === "signing" ? "Signing" : step === "stamping" ? "Stamping" : step === "saving" ? "Saving" : `Lock and Put In for ${count} ${count === 1 ? "Reader" : "Readers"}`}
           </Button>
           </div>
         </form>
       </Panel>
-      {saved && <Toast key={`ok${saved.round}`}>Put in. {saved.readers} {saved.readers === 1 ? "reader" : "readers"}{house.recovery && " and the recovery key"} can open it. <Link href="/house" className="underline">See the House</Link></Toast>}
+      {saved && <Toast key={`ok${saved.round}`}>Put in and stamped on QoreChain. {saved.readers} {saved.readers === 1 ? "reader" : "readers"}{house.recovery && " and the recovery key"} can open it. <Link href="/papers" className="underline">See All Papers</Link></Toast>}
       {failed && (
         <Toast key={`bad${failed.round}`} tone="bad">
           <span className="flex flex-wrap items-center gap-x-3 gap-y-2">{failed.message}

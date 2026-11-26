@@ -1,4 +1,4 @@
-import { Check, TriangleAlert, X, Clock } from "lucide-react";
+import { Check, Clock, ExternalLink, TriangleAlert, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 const tones = {
@@ -9,7 +9,15 @@ const tones = {
 };
 
 // The one status pill. Colour is never the only signal: every tone has its own icon.
-export default function Badge({ tone, children }: { tone: keyof typeof tones; children: ReactNode }) {
+// `href` makes it a link to another site (the explorer), opened in a new tab, with a taller hit area.
+export default function Badge({ tone, children, href, "aria-label": label }: { tone: keyof typeof tones; children: ReactNode; href?: string; "aria-label"?: string }) {
   const { cls, Icon } = tones[tone];
-  return <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${cls}`}><Icon className="size-3.5" aria-hidden />{children}</span>;
+  const pill = (
+    <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${cls}`}>
+      <Icon className="size-3.5" aria-hidden />{children}{href && <ExternalLink className="size-3" aria-hidden />}
+    </span>
+  );
+  return href
+    ? <a href={href} target="_blank" rel="noreferrer" aria-label={label} className="relative inline-flex w-fit rounded-full hover:brightness-125 after:absolute after:inset-x-0 after:-inset-y-1">{pill}</a>
+    : pill;
 }

@@ -30,4 +30,12 @@ describe("/api/chain", () => {
     expect(await res.json()).toEqual({ found: false });
     expect(fetch.mock.calls[0][0]).toBe("https://api-testnet.qore.host/qorechain/pqc/v1/kem/qor1w0c3th6k7gu3ptylnz6ngv2lskw6vaa29s60ha");
   });
+
+  // T-11.4 (chain half) a reader's browser checks a stamp with inspectTransaction, which needs tx encode
+  it("forwards tx encode, which the stamp check uses", async () => {
+    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response('{"tx_bytes":""}', { status: 200 }));
+    const path = ["cosmos", "tx", "v1beta1", "encode"];
+    expect((await call(POST, path.join("/"), path, { method: "POST", body: "{}" })).status).toBe(200);
+    expect(fetch.mock.calls[0][0]).toBe("https://api-testnet.qore.host/cosmos/tx/v1beta1/encode");
+  });
 });

@@ -12,7 +12,7 @@ const GETS = [
   "cosmos/upgrade/v1beta1/applied_plan/v[0-9.]+",
   "cosmos/tx/v1beta1/txs/[0-9A-Fa-f]{64}",
 ].map((p) => new RegExp(`^${p}$`));
-const POSTS = [/^cosmos\/tx\/v1beta1\/(simulate|txs)$/];
+const POSTS = [/^cosmos\/tx\/v1beta1\/(simulate|txs|encode)$/]; // encode: inspectTransaction reads a stamp's bytes (U11)
 
 async function pass(req: Request, ctx: RouteContext<"/api/chain/[...path]">, list: RegExp[]) {
   const path = (await ctx.params).path.join("/");
