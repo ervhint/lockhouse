@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   if (!body || typeof body !== "object" || Object.keys(body).sort().join() !== FIELDS.join()) return refuse("Send only the item id, title, locked copy, signature and readers.");
   const { id, title, envelope, signature, readers } = body;
   if (typeof id !== "string" || !UUID.test(id)) return refuse("The item id is not valid.");
-  if (typeof title !== "string" || titleProblem(title)) return refuse(titleProblem(String(title)) ?? "Give it a title.");
+  if (typeof title !== "string" || titleProblem(title) || title !== title.trim()) return refuse(titleProblem(String(title)) ?? "Give it a title with no spaces at the start or end.");
   if (!Array.isArray(readers) || !readers.includes(me) || new Set(readers).size !== readers.length || readers.some((r) => typeof r !== "string"))
     return refuse("Pick each reader once, and keep yourself as a reader.");
 
@@ -43,7 +43,9 @@ export async function POST(req: NextRequest) {
     const parsed = env && parseEnvelope(env);
     if (!parsed || parsed.mode !== "hybrid") return refuse("The locked copy must be a hybrid lock with one entry per reader.");
     if (parsed.entries.length !== readers.length + (recovery ? 1 : 0))
-      return refuse(recovery ? "This house has a recovery key, so it must be one more reader. Reload the page, then put it in again." : "The locked copy must be a hybrid lock with one entry per reader.");
+      return refuse(recovery ? "This house has a recovery key, so it must be one more reader. Reload the page, then put it in again."
+        : parsed.entries.length === readers.length + 1 ? "This house's recovery key changed. Reload the page, then put it in again."
+        : "The locked copy must be a hybrid lock with one entry per reader.");
     if (parsed.ciphertext.length - 16 > MAX_FILE + NAME_ROOM) return refuse(`The file is over the ${MAX_FILE / 1024 / 1024} MB limit.`);
     size = env.length;
   } catch {

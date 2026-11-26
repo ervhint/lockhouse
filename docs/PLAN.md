@@ -16,8 +16,8 @@
 Before recording: the three family accounts are set up (padlocks registered on testnet, signed cards published) and the Thief window is open. All papers are made-up samples.
 
 1. **Ayu's house.** Ayu's window shows the house: Ayu, Tari and Ratna, each with a "Padlock in the Phone Book ✓" badge that links to the registration on the testnet explorer.
-2. **The gate.** Ayu drops in the sample family KK and ticks Tari and Ratna. The screen shows it being locked in this browser ("Locked on This Device · ML-KEM-1024 + X25519 · 3 readers") before it's sent. Only the locked copy is stored.
-3. **Tari opens it.** In Tari's window the KK appears, "Put in by Ayu". Tari opens it; it unlocks in her browser.
+2. **The gate.** Ayu drops in the sample family KK and ticks Tari and Ratna. The screen shows it being locked in this browser ("Locked on This Device · ML-KEM-1024 + X25519 · 3 readers") before it's sent, then stamped on QoreChain (U11). Only the locked copy is stored.
+3. **Tari opens it.** In Tari's window the KK appears, "Put in by Ayu". Tari opens it; it unlocks in her browser, with "Stamped on QoreChain · {date}" (U11).
 4. **Ratna opens the same lock.** In Ratna's window the same single locked copy opens too (one lock, many readers).
 5. **Ratna puts something in for Ayu.** Ratna puts in a private note for Ayu. It's locked to Ayu's padlock and signed. In Ayu's window it shows "From Ratna · Signature Checked on QoreChain ✓".
 6. **The drill (labelled "Simulation").** The Thief window already holds every stored copy (the store is public: a copy opens nothing). The Thief presses "Pretend Q-Day": the Thief is handed the old keys, as a quantum computer would work them out. The old-lock copy of the sample KTP opens; every Lockhouse copy stays shut.
@@ -30,7 +30,7 @@ Steps 2–6 are each about 10–15 seconds. The account setup (making keys, regi
 | Part (weight) | Golden-path step |
 | --- | --- |
 | Works as described (25%) | Every step runs on testnet; only the Thief's power in step 6 is pretend, and it says so |
-| QoreChain tech usage (25%) | Step 1 (PQC key + KEM key registration, signed cards), step 2 (QoreSeal in the browser), step 5 (QoreSign checked against chain) |
+| QoreChain tech usage (25%) | Step 1 (PQC key + KEM key registration, signed cards), step 2 (QoreSeal in the browser; a hybrid ML-DSA-87 stamp transaction per paper, U11), step 3 (the stamp checked with QoreSign's `inspectTransaction`), step 5 (QoreSign checked against chain) |
 | Post-quantum correctness (20%) | Step 6: the old lock breaks, the hybrid lock holds because of ML-KEM-1024; honest limits in the README |
 | Originality (15%) | The family house itself (steps 1, 3–5) |
 | Clarity, UX, docs (15%) | One gate, one list, one drill; the README limits |
@@ -129,6 +129,7 @@ erDiagram
     text_array readers "qor1 addresses"
     int size
     text recovery "U10: the lookup, when the recovery key is a reader"
+    text stamp "U11: hash of the stamp transaction on QoreChain; null = not stamped"
     timestamptz created_at
   }
   drill_keys {
@@ -139,16 +140,16 @@ erDiagram
   }
 ```
 
-One migration file per unit that adds tables (U3: people, houses, house_members · U5: items · U7: drill_keys · U10: recovery columns), applied to **Staging** `egtxrdfhmtdiujdiywkm` only.
+One migration file per unit that adds tables (U3: people, houses, house_members · U5: items · U7: drill_keys · U10: recovery columns · U11: items.stamp), applied to **Staging** `egtxrdfhmtdiujdiywkm` only.
 
 ### 3.3 Server routes (the BFF)
 
 | Route | Who | Does |
 | --- | --- | --- |
-| `GET/POST /api/chain/[...path]` | anyone | Pass-through to the testnet REST, only for the paths the kits use (account info, balances, PQ key, KEM key, simulate, broadcast, tx lookup). The kits take a `rest` address, so the browser gives them `/api/chain` (D-03) |
+| `GET/POST /api/chain/[...path]` | anyone | Pass-through to the testnet REST, only for the paths the kits use (account info, balances, PQ key, KEM key, simulate, broadcast, tx lookup; U11 adds tx encode, which `inspectTransaction` uses to get a committed transaction's bytes). The kits take a `rest` address, so the browser gives them `/api/chain` (D-03) |
 | `GET /api/auth/nonce` · `POST /api/auth/verify` · `POST /api/auth/sign-out` | anyone | Sign In With QoreChain (U3) |
 | `GET /api/house` · `POST /api/house/members` | house members | House, members, item list; add a member (U4, U5) |
-| `POST /api/items` · `GET /api/items/[id]` | house members | Put in; get one item for a reader (U5, U6) |
+| `POST /api/items` · `GET /api/items/[id]` | house members | Put in; get one item for a reader (U5, U6). U11: a put-in may carry its stamp (a tx hash), stored only if it checks out on chain; readers get it back |
 | `GET /api/drill` · `POST /api/drill` | anyone · members | Every stored copy with no title, names or readers (`id, envelope`), plus the old-lock copies and given old keys; give my old keys (U7). One route instead of the planned `/api/copies` + `/api/drill`: the Drill needs both at once |
 | `POST /api/house/recovery` | members | Give the house its recovery key (U10): the public half and a lookup, signed by me and checked on chain. Once per house (409 after) |
 | `POST /api/recover` | anyone | Open With Recovery Words (U10): the lookup made from the words finds the papers locked to that key (copy, title, sender); 404 if none. No sign-in |
@@ -160,7 +161,7 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 
 ### 3.5 Web3: money, powers, rules that always hold, transaction states
 
-**Asset flows.** The only money that moves is test QOR for gas: each family account pays the network a small fee (about 0.04 test QOR per registration at 0.1 uqor per gas) for its own two registrations. Test QOR comes from the faucet (100 per 24 h). No contract, no transfers between people, no tokens. The Thief and the server hold no QOR.
+**Asset flows.** The only money that moves is test QOR for gas: each family account pays the network a small fee (about 0.04 test QOR per registration at 0.1 uqor per gas) for its own two registrations. Test QOR comes from the faucet (100 per 24 h). No contract, no transfers between people, no tokens. U11: each paper put in costs its sender one more small fee (the stamp: 1 uqor sent to themselves, plus gas). The Thief and the server hold no QOR.
 
 **Permissions.** No admin and no contract. The person who starts a house is its owner; any member can add someone (G2). Any member can remove another member, not themselves (U9); the removed person gets an empty house of their own. The server can't open any paper or forge a signature. It *could* hide or delete a locked copy, or refuse to store one; that is in the README limits.
 
@@ -170,6 +171,7 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 - INV-3: every reader of an item was a member of that house, with a card that checked out against the chain, when it was put in. The sender is always a reader.
 - INV-4: an envelope opens only with its own item id as AAD (extra data that is checked but not hidden), so a copy can't be moved to another item.
 - INV-5: everything uses chain id `qorechain-diana`.
+- INV-6 (U11): every stored stamp is a committed transaction signed by the paper's sender, with an ML-DSA-87 layer that checks out against their key in the phone book, whose memo is `lockhouse-stamp-v1|{SHA-256 of the INV-2 text}`.
 
 **Transaction states.**
 
@@ -179,11 +181,12 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 | Register padlock (`MsgRegisterKEMKey`, hybrid signature) | yes, gas | same as above |
 | Sign the recipient card | no (a signed message) | made in the browser after the padlock confirms |
 | Sign in | no (a signed message) | signing → in / failed |
-| Sign a paper when putting it in | no (a signed message) | locking → signing → saved / save failed |
+| Sign a paper when putting it in | no (a signed message) | locking → signing → stamping (U11) → saved / save failed |
+| Stamp a paper (U11): `MsgSend` of 1 uqor to myself, hybrid signature, the paper's fingerprint in the memo | yes, gas | stamping (sent, waiting to be committed) → confirmed → saving / failed (reason in plain words, nothing saved, press again) |
 
 ## 4. Build phases and units
 
-**Order (rule: setup → shared functions → demo Musts in golden-path order):** U0 → U1 → U2 → U3 → U4 → U5 → U6 → U7. Coulds U8–U10 only if time allows. Each unit is one chat. Every Must story has a unit (US-02, US-07, US-09 are Shoulds, folded into U1, U2/U4 and U5 because each is a few lines).
+**Order (rule: setup → shared functions → demo Musts in golden-path order):** U0 → U1 → U2 → U3 → U4 → U5 → U6 → U7. Coulds U8–U10 only if time allows. U11 was added in P7 by Laras (26 Nov). Each unit is one chat. Every Must story has a unit (US-02, US-07, US-09 are Shoulds, folded into U1, U2/U4 and U5 because each is a few lines).
 
 Every unit also: replaces that page's mock data and `?state=` jumps with the real flow, uses the shared components (AGENTS.md), and passes `better-interface`. "Est" is a rough guess for one chat.
 
@@ -320,6 +323,20 @@ Covers: US-16      Screens: S-03, S-07      Depends on: U7      Est: 2h
 
 Built 24 Nov (D-16): any member makes it on `/house/recovery` (words made and shown once in the browser; only the public half, a signature and a lookup are sent). Put In checks the member's signature on chain before locking, so a hacked server can't slip in a key of its own; the server refuses a copy without the extra entry. `/recover` (no keys, no sign-in) finds and opens the papers. Removing the member who made it drops the key (they saw the words); papers already locked to it still open with its words.
 
+### Phase G: Added in P7 (Laras, 26 Nov)
+
+### U11 — Stamp a paper on QoreChain  (Should · demo)
+Covers: US-20      Screens: S-07, S-08, S-12      Depends on: U6, U10      Est: 3h      Model: Opus 5.5 · max (Laras's choice)
+Every paper gets a stamp when it is put in: a tiny transaction from the sender to themselves (1 uqor), signed hybrid (secp256k1 + ML-DSA-87), whose memo is `lockhouse-stamp-v1|{SHA-256 of the INV-2 text}`. The block time proves when the paper was put in, and no one, our server included, can change or back-date it. The memo holds a fingerprint of the signed text (house, item, title, copy), not of the copy alone, so the public store (D-12) can't be matched to senders on chain. Readers check the stamp themselves with QoreSign's `inspectTransaction` (the kit's own check, the explorer's classification), which also checks the ML-DSA-87 layer against the sender's key in the phone book.
+Acceptance:
+- AC-11.1 Given a paper being put in, when it is locked and signed, then the browser sends the stamp, shows "Stamping on QoreChain…", waits until it is committed (NF-6), and only then saves. The toast says it was stamped.
+- AC-11.2 Given stamping fails (no test QOR, refused, not committed within 60 s, QoreChain not reached), then nothing is saved, the error says why and what to do, and pressing the button again starts over.
+- AC-11.3 Given a put-in with a stamp, the server stores it only if the stamp checks out on chain (INV-6); otherwise 400 and nothing stored (503 if QoreChain can't be reached). A put-in with no stamp is still stored; its readers see Not Stamped.
+- AC-11.4 Given a reader opens a stamped paper, then the browser checks the stamp itself and shows "Stamped on QoreChain · {date}", linking to the transaction on the explorer.
+- AC-11.5 Given a paper with no stamp (put in before U11, or the fake drop-in), then "Not Stamped" shows. Given a stamp that doesn't prove this paper (title or copy changed, another paper's stamp, another signer), then "Stamp Doesn't Match" shows.
+- AC-11.6 Given Open With Recovery Words, then each paper shows the same stamp result.
+Tests: T-11.1 (integration, testnet: stamp, then check; changed text, another signer and an unknown hash don't match), T-11.2 (integration, testnet + Staging: the route stores a good stamp, refuses another paper's stamp and a malformed one, stores nothing), T-11.3 (integration: an account with no test QOR gets the reason in plain words), T-11.4 (e2e golden: Put In, then the paper shows its stamp and explorer link), T-11.5 (e2e: Not Stamped on an old paper and the fake drop-in; Stamp Doesn't Match after changing a row on Staging; Open With Recovery Words)
+
 **Won't in this build:** group keys (US-19), a house picker (being in several houses).
 
 ## 5. Decisions log
@@ -342,6 +359,7 @@ Built 24 Nov (D-16): any member makes it on `/house/recovery` (words made and sh
 | D-14 | 23 Nov | The sender is always a reader of what they put in | They can see what they sent; one rule |
 | D-15 | 23 Nov | The test plan was written in the main chat, not by a subagent | All acceptance criteria were already here; a subagent would re-read everything |
 | D-16 | 24 Nov | The recovery key is a plain QoreSeal key from its own 24 words, not an account: no padlock on chain. Its public half is signed by the member who made it; the words find their papers through a SHA-256 lookup only they give (members see the public key, so it can't be the lookup). One per house; removing its maker drops it | QoreSeal's "recovery recipient (an offline key)". No test QOR or chain step; the signature keeps a hacked server from adding its own reader |
+| D-17 | 26 Nov | U11's stamp is a `MsgSend` of 1 uqor to yourself with the fingerprint in the memo, signed hybrid like the padlock (D-04). Stamp before saving: if it fails, nothing is saved. The server checks a stamp but doesn't require one; readers check it again themselves | The testnet has no module for notes, and a memo on a self-transfer is visible in any explorer. Failing before saving keeps "every new paper is stamped" simple. Readers trusting their own check, not the server's, is the rule since D-10 |
 
 ## 6. Open questions
 

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { KeyRound } from "lucide-react";
 import type { RecipientCard } from "@qorechain/qoreseal";
 import Input from "@/components/Input";
 import Checkbox from "@/components/Checkbox";
@@ -150,19 +151,18 @@ export default function PutInForm() {
               return (
                 <Checkbox key={m.address} checked={mine || picked.includes(m.address)} disabled={mine}
                   onChange={(e) => setPicked((p) => e.target.checked ? [...p, m.address] : p.filter((a) => a !== m.address))}>
-                  <span className="font-medium">{m.name}</span>
-                  <AddressChip address={m.address} />
-                  {mine && <span className="ml-auto text-sm text-muted">Always a Reader</span>}
-                </Checkbox>
+                  <span className="font-medium sm:min-w-20">{m.name}{mine && <span className="font-normal text-muted"> (You)</span>}</span>
+                  <AddressChip address={m.address} />                </Checkbox>
               );
             })}
-            {house.recovery && (
-              <Checkbox checked disabled readOnly>
-                <span className="font-medium">Recovery Key</span>
-                <span className="ml-auto text-sm text-muted">Always a Reader</span>
-              </Checkbox>
-            )}
           </fieldset>
+          {/* Not a person, so not in the list: the recovery key opens every paper (U10). The maker's name shows so a stranger stands out. */}
+          {house.recovery && (
+            <p className="-mt-3 flex items-start gap-2 text-sm text-muted">
+              <KeyRound className="mt-0.5 size-4 shrink-0" aria-hidden />
+              The house&apos;s recovery key (made by {house.members.find((m) => m.address === house.recovery!.by)?.name}) can open it too.
+            </p>
+          )}
           <div className="flex flex-col gap-3">
           {/* Always in the page (never display:none), so screen readers announce each step. */}
           <div role="status" className="flex flex-wrap gap-2">

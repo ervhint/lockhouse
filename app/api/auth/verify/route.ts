@@ -16,7 +16,8 @@ export async function POST(req: NextRequest) {
     const { message, signature, card } = await req.json();
     // Checks the domain, nonce and chain id, both signatures, and the ML-DSA-87 key the account has on chain.
     const f = await verifySiwqWithChain({ rest: REST, message, signature, domain: url.host, nonce, chainId: CHAIN_ID, address: parseSiwqMessage(message).address });
-    if (Date.now() - Date.parse(f.issuedAt) > 600_000) throw new Error("older than 10 minutes"); // even with an expirationTime
+    const age = Date.now() - Date.parse(f.issuedAt);
+    if (!(age > -60_000 && age < 600_000)) throw new Error("older than 10 minutes, or not a date"); // even with an expirationTime
     const name = nameFrom(f.statement)?.trim();
     if (!name || name.length > 80) throw new Error("no name in the statement");
     if (card?.address !== f.address) throw new Error("the card is for another account");

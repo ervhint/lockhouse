@@ -81,11 +81,11 @@ Four profiles, all accounts set up first (keys, padlock, sign-in, house of three
 
 | Step (PLAN §1.2) | Tests | Result |
 | --- | --- | --- |
-| 1 The house | T-4.1 | ⏭ |
-| 2 The gate | T-5.1, T-5.7 | ⏭ |
-| 3 Member A opens it | T-6.1 | ⏭ |
-| 4 Member B opens the same lock | T-6.2 | ⏭ |
-| 5 Member B puts something in for the Owner | T-5.1 (one reader) + T-6.1 in the Owner's window | ⏭ |
+| 1 The house | T-4.1 | ✅ |
+| 2 The gate | T-5.1, T-5.7 | ✅ |
+| 3 Member A opens it | T-6.1 | ✅ |
+| 4 Member B opens the same lock | T-6.2 | ✅ |
+| 5 Member B puts something in for the Owner | T-5.1 (one reader) + T-6.1 in the Owner's window | ✅ |
 | 6 The drill | T-7.1, T-7.2, T-7.3 | ✅ |
 | 7 Still fine | T-7.5 | ✅ |
 
@@ -99,13 +99,19 @@ Four profiles, all accounts set up first (keys, padlock, sign-in, house of three
 | S-02 Make or Restore Keys | type your name; making; restore; wrong words | U1 | ✅ 1366px + 375px (in a 375px frame; Chrome would not resize the window) |
 | S-03 Secret Words Backup | shown; confirm you saved them | U1 | ✅ 1366px + 375px (in a 375px frame; Chrome would not resize the window) |
 | S-04 Register Padlock | not enough test QOR; sign 1 of 2; sign 2 of 2; said no; pending; confirmed; failed | U2 | ✅ 1366px + 375px (375px frame): not enough test QOR, loading, sign 1 of 2, said no, pending, sign 2 of 2, confirmed. Failed: unit only |
-| S-05 House | loading; no other members; no papers; updating; Forget Keys sheet | U4, U5, U1 | ⏭ |
-| S-06 Add Member | checking card; no padlock; bad card; already in another house; added | U4 | ⏭ |
-| S-07 Gate | choose file or note; pick readers; too big; locking; signing; saved; save failed | U5 | ⏭ |
-| S-08 Item | opening; opened + Signature Checked; not for you; signature not proven | U6 | ⏭ |
-| S-09 Drill | stored copies; gave old keys; Pretend Q-Day running; result; no old keys yet | U7 | ⏭ |
+| S-05 House | loading; no other members; no papers; updating; Forget Keys sheet | U4, U5, U1 | ✅ each state in its unit (PROGRESS); P7: 375px, no sideways scroll |
+| S-06 Add Member | checking card; no padlock; bad card; already in another house; added | U4 | ✅ each state in its unit (PROGRESS); P7: 375px, no sideways scroll |
+| S-07 Gate | choose file or note; pick readers; too big; locking; signing; saved; save failed | U5 | ✅ each state in its unit (PROGRESS); P7: 375px, no sideways scroll |
+| S-08 Item | opening; opened + Signature Checked; not for you; signature not proven | U6 | ✅ each state in its unit (PROGRESS); P7: 375px, no sideways scroll |
+| S-09 Drill | stored copies; gave old keys; Pretend Q-Day running; result; no old keys yet | U7 | ✅ each state in its unit (PROGRESS); P7: 375px, no sideways scroll |
 | S-10 Sign In | ready; signing; failed | U3 | ✅ |
 
 ## Latest run
 
-None yet.
+**P7 full run, 24 Nov 2026 (localhost, Staging, testnet).** After the `/code-review` and security fixes (PROGRESS, P7).
+
+- `npm test` 40/40 · `npm run build` + `npm run check:build` clean · GitHub Actions: last run (U10) green · gitleaks over all 25 commits: no leaks · `npm audit --omit=dev`: 0.
+- Golden path, four Chrome profiles at 1280px (Chrome would not open a wider window): all 7 steps ✅. (1) Ayu's House: Ayu, Tari, Ratna, each "Padlock in the Phone Book". (2) Ayu put in "P7 Sample Card" (the made-up SVG card) for Tari and Ratna; the Recovery Key row showed "Made by Ayu · Always a Reader"; "Locking on This Device…", then "Put in. 3 readers and the recovery key can open it."; console: locked for 3 readers in 995 ms with the card checks. (3) Tari and (4) Ratna each opened it, "From Ayu · Signature Checked on QoreChain"; the picture now shows from a `data:` URL. (5) Ratna put in "P7 Note for Ayu" for Ayu; Ayu opened it, "From Ratna · Signature Checked on QoreChain"; Tari got "This Paper Is Not for You" (T-6.3). (6) Tari gave her old keys again (`npm test` clears them); the Thief (no keys, `/api/house` 401) pressed Pretend Q-Day: 3 old-lock samples opened, 8 of 8 Lockhouse copies stayed shut. (7) Tari's card still opened.
+- 375px (a 375px frame in Tari's window): 15 pages and sheets, no sideways scroll and no element past the edge: Welcome, House, Add Someone, Make a Recovery Key, Put In, both papers (opened; Not for You), Drill, Give sheet, Recover, Make/Restore Keys, Padlock, Sign In, Forget Keys sheet. Put In's Recovery Key row with "Made by Ayu" checked by eye.
+- Headers on every page: `Content-Security-Policy: frame-ancestors 'self'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`.
+- Still ⏭ / part: T-2.1 funding a fresh account (faucet needs Laras's sign-in); T-2.6 a real chain refusal in Chrome. Not re-run in Chrome in P7 (passed in their units, covered by `npm test`): T-1.x, T-2.x, T-3.x, T-4.4–4.9, T-5.3–5.6, T-6.4–6.7, T-8.1, T-9.1, T-10.1.

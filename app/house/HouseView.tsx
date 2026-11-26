@@ -117,7 +117,7 @@ export default function HouseView({ remove, recoverySaved }: { remove?: string; 
               {house.members.map((m) => (
                 <li key={m.address} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white/6 px-4 py-3">
                   <UserRound className="size-5 text-muted" aria-hidden />
-                  <span className="font-medium">{m.name}</span>
+                  <span className="font-medium sm:min-w-20">{m.name}{m.address === house.me && <span className="font-normal text-muted"> (You)</span>}</span>
                   <AddressChip address={m.address} copy />
                   <span className="flex flex-wrap items-center gap-2 sm:ml-auto">
                     <PadlockBadge address={m.address} round={round} />
@@ -158,7 +158,7 @@ export default function HouseView({ remove, recoverySaved }: { remove?: string; 
           {!house ? <Skeleton /> : house.recovery
             ? <>
                 <Badge tone="ok">Recovery Key Made by {house.members.find((m) => m.address === house.recovery!.by)?.name}</Badge>
-                <p className="text-muted">Every paper put in since it was made can also be opened with the recovery words, on any device. Papers put in before it can&apos;t.</p>
+                <p className="text-muted">The recovery key can only open every paper put in after it was made, on any device. It cannot open older papers from before it was made.</p>
                 <Button variant="secondary" href="/recover" className="sm:self-start">Open With Recovery Words</Button>
               </>
             : <EmptyState icon={KeyRound} title="No Recovery Key Yet" text="If someone loses their secret words, what was locked for them is lost. A recovery key is a second set of words, kept on paper, that can also open every paper put in after it is made." action={<Button variant="secondary" href="/house/recovery">Make a Recovery Key</Button>} />}

@@ -69,7 +69,7 @@ export default function MakeRecovery() {
     <Panel className="flex flex-col gap-5">
       <Badge tone="warn">Shown Once</Badge>
       <Words words={words!.split(" ")} />
-      <p className="text-muted">Write them on paper and keep it somewhere safe, away from your devices. Anyone who has these words can open the papers locked to them.</p>
+      <p className="text-muted">Write these words on paper. Keep the paper where your family can find it. Don&apos;t save the words on your phone or computer.</p>
       <Checkbox checked={ok} onChange={(e) => setOk(e.target.checked)} disabled={busy}>I wrote the recovery words on paper</Checkbox>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <Button ref={save} full disabled={!ok} loading={busy} onClick={send}>{busy ? "Saving the Recovery Key" : "Save the Recovery Key"}</Button>

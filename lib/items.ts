@@ -49,6 +49,15 @@ export async function itemText(houseId: string, id: string, title: string, envel
 export const signItem = async (keys: Keys, houseId: string, id: string, title: string, envelope: string) =>
   signMessage({ chainId: CHAIN_ID, signer: keys.address, data: await itemText(houseId, id, title, envelope), classicalKey: keys.classical, pqKey: keys.pq });
 
+/** A picture as a data: URL. A blob: URL would carry this site's origin, so an SVG opened in its own tab could run
+ *  script here and read the keys in localStorage; a data: URL has no origin of ours. */
+export const pictureUrl = (p: Paper) => new Promise<string>((ok, no) => {
+  const r = new FileReader();
+  r.onload = () => ok(r.result as string);
+  r.onerror = no;
+  r.readAsDataURL(new Blob([p.bytes as BlobPart], { type: p.type }));
+});
+
 /** Check each reader's card on chain, then seal one hybrid envelope with the item id as AAD (AC-5.1, INV-4).
  *  `extra`: readers with no card, already checked (the house's recovery key, U10). */
 export async function lockCopy(paper: Paper, cards: RecipientCard[], rest: string, extra: SealRecipient[] = []) {

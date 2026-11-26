@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await db().from("houses").update({ recovery: { mlkem, x25519, by: me, signature }, recovery_lookup: lookup })
     .eq("id", house).is("recovery", null).select("id");
-  if (error && error.code !== "23505") throw error;
-  if (error || !data.length) return refuse("This house already has a recovery key. Nothing was changed.", 409);
+  if (error?.code === "23505") return refuse("These recovery words are already used. Nothing was saved. Go back and make new ones.", 409);
+  if (error) throw error;
+  if (!data.length) return refuse("This house already has a recovery key. Nothing was changed.", 409);
   return Response.json({ ok: true });
 }

@@ -27,7 +27,7 @@ export async function houseIdOf(address: string): Promise<string | null> {
   return data?.house_id ?? null;
 }
 
-/** What the House and Put In screens need (S-05, S-07): members in the order they joined, with the cards
+/** What the House and Put In screens need (S-05, S-07): me first, then the others in the order they joined, with the cards
  *  that lock papers to them (cards are public); papers newest first, with no locked copy; the recovery key's
  *  public half, if the house has one (U10; never its lookup). Null if in no house. */
 export async function houseOf(address: string) {
@@ -42,7 +42,8 @@ export async function houseOf(address: string) {
   if (i.error) throw i.error;
   if (h.error) throw h.error;
   const members = (m.data as unknown as { address: string; people: { name: string; card: RecipientCard } }[])
-    .map((r) => ({ name: r.people.name, address: r.address, card: r.people.card }));
+    .map((r) => ({ name: r.people.name, address: r.address, card: r.people.card }))
+    .sort((a, b) => Number(b.address === address) - Number(a.address === address)); // me first, then in the order they joined
   const items = (i.data as unknown as { id: string; title: string; readers: string[]; created_at: string; people: { name: string } }[])
     .map((r) => ({ id: r.id, title: r.title, sender: r.people.name, date: r.created_at, readers: r.readers.length }));
   return { id, members, items, recovery: h.data.recovery as Recovery | null };

@@ -8,7 +8,7 @@ export default async function Recovery() {
   await signedIn(); // no session: off to Sign In (AC-3.5)
   return (
     <AppShell>
-      <Heading title="Make a Recovery Key">A second set of secret words for the whole house. Every paper put in from now on can also be opened with them, on any device.</Heading>
+      <Heading title="Make a Recovery Key">Spare words for the whole house. If someone loses their own words, these words can still open the papers.</Heading>
       <MakeRecovery />
     </AppShell>
   );

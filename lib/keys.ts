@@ -15,7 +15,7 @@ export function keysFrom(words: string) {
 // accepted a sign-in from them, so the padlock is done and Welcome can point to Sign In.
 const SLOT = "lockhouse";
 export type Saved = { name: string; words: string; signedInBefore?: true };
-export const loadKeys = (): Saved | null => JSON.parse(localStorage.getItem(SLOT) ?? "null");
+export const loadKeys = (): Saved | null => { try { return JSON.parse(localStorage.getItem(SLOT) ?? "null"); } catch { return null; } };
 export const saveKeys = (s: Saved) => localStorage.setItem(SLOT, JSON.stringify(s));
 export const forgetKeys = () => localStorage.removeItem(SLOT);
 

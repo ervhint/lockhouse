@@ -5,7 +5,7 @@ import Heading from "@/components/Heading";
 import Panel from "@/components/Panel";
 import Button from "@/components/Button";
 import Badge from "@/components/Badge";
-import type { Paper } from "@/lib/items";
+import { pictureUrl, type Paper } from "@/lib/items";
 
 const when = (d: string) => new Date(d).toLocaleDateString(undefined, { dateStyle: "medium" });
 
@@ -15,10 +15,16 @@ export default function PaperView({ title, senderName, date, readerCount, proven
   { title: string; senderName: string; date: string; readerCount?: number; proven: boolean; paper: Paper | null; back: ReactNode }) {
   const [url, setUrl] = useState<string | null>(null);
 
-  // Pictures and PDFs show as they are; the object URL is made here and let go on leaving.
+  // Pictures show from a data: URL (see pictureUrl); a PDF from an object URL, made here and let go on leaving.
   useEffect(() => {
-    if (!paper || !(paper.type.startsWith("image/") || paper.type === "application/pdf")) return setUrl(null);
-    const u = URL.createObjectURL(new Blob([paper.bytes as BlobPart], { type: paper.type.startsWith("image/") ? paper.type : "application/pdf" }));
+    setUrl(null);
+    if (paper?.type.startsWith("image/")) {
+      let live = true;
+      pictureUrl(paper).then((u) => live && setUrl(u), () => {});
+      return () => { live = false; };
+    }
+    if (paper?.type !== "application/pdf") return;
+    const u = URL.createObjectURL(new Blob([paper.bytes as BlobPart], { type: "application/pdf" }));
     setUrl(u);
     return () => URL.revokeObjectURL(u);
   }, [paper]);

@@ -41,7 +41,7 @@ export default function SignInForm() {
     <>
       {state === "failed" && (
         <div className="flex flex-col items-start gap-2" role="alert">
-          <Badge tone="bad">Sign-in failed. Try again.</Badge>
+          <Badge tone="bad">Sign-In Failed</Badge>
           <p className="text-muted">If it fails again, check that your padlock is in the Phone Book. <a href="/padlock" className="underline">Check Your Padlock</a></p>
         </div>
       )}

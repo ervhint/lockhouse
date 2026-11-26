@@ -177,7 +177,7 @@ describe.runIf(tari)("Add Member with a real card (testnet + Staging)", () => {
       expect(await houseOfRow(them)).toBe(owner.house);
       expect(await houseExists(spare!.id)).toBe(false);
       const theirView = await (await getHouse(them)).json();
-      expect(theirView.members).toMatchObject([{ name: "Owner", address: owner.address }, { name: "Tari", address: them }]);
+      expect(theirView.members).toMatchObject([{ name: "Tari", address: them }, { name: "Owner", address: owner.address }]); // me first
     } finally {
       await db().from("house_members").update(before!).eq("address", them);
       await db().from("houses").delete().eq("id", spare!.id);
