@@ -19,7 +19,6 @@ export default function AppShell({ children, signedIn = true }: { children: Reac
             <Link href="/house" className={NAV}>House</Link>
             <Link href="/members" className={NAV}>Members</Link>
             <Link href="/papers" className={NAV}>Papers</Link>
-            <Link href="/drill" className={NAV}>Drill</Link>
             <UserMenu />
           </nav>
         )}

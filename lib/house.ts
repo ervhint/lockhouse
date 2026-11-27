@@ -27,7 +27,7 @@ export async function houseIdOf(address: string): Promise<string | null> {
   return data?.house_id ?? null;
 }
 
-export const PAGE = 20; // the Papers page loads this many at a time
+export const PAGE = 10; // the Papers page loads this many at a time
 
 /** A house's papers newest first, `size` of them from `from`, with no locked copy, and how many it has. */
 export async function papersOf(houseId: string, from: number, size: number) {

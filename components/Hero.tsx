@@ -143,6 +143,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
         <header className="bar">
           <Link className="logo" href="/" aria-label="Lockhouse"><Logo />Lockhouse</Link>
           <div className="side">
+            <Link className="cta alt drill" href="/drill">Play the Thief</Link>
             {next.href !== "/house" && next.href !== "/sign-in" && <Link href="/sign-in">Sign In</Link>}
             <Link className="cta" href={next.href}>{next.label}</Link>
           </div>
@@ -157,7 +158,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
           {saved
             ? <p className="cap">Welcome back, {saved.name}. {next.line} <Link href={next.href} style={{ textDecoration: "underline" }}>{next.link}</Link></p>
             : <p className="cap">Already have secret words? <Link href="/keys?restore" style={{ textDecoration: "underline" }}>Restore Your Keys</Link></p>}
-        </div>
+          <p className="cap drill-m"><Link className="cta alt" href="/drill">Play the Thief in the Q-Day Drill</Link></p>        </div>
       </div>
     </main>
   );

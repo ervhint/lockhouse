@@ -192,8 +192,7 @@ export default function HouseView({ view, remove, recoverySaved }: { view: "home
                 </>
               : <EmptyState icon={KeyRound} title="No Recovery Key Yet" text="If someone loses their secret words, what was locked for them is lost. A recovery key is a second set of words, kept on paper, that can also open every paper put in after it is made." action={<Button variant="secondary" href="/house/recovery">Make a Recovery Key</Button>} />}
           </Panel>
-        )}
-      </div>
+        )}      </div>
       {leaving && <RemoveSheet member={leaving} onRemoved={(name) => { setRemoved({ name, round: Date.now() }); router.replace("/members"); load(); }} />}
       {removed && <Toast key={removed.round}>{removed.name} is out of the house.</Toast>}
       {saved && !removed && <Toast>The recovery key is saved. Papers put in from now on can also be opened with its words.</Toast>}

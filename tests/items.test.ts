@@ -98,13 +98,13 @@ describe.runIf(ayu && tari)("POST /api/items (testnet + Staging)", () => {
     const house = await (await houseRoute(new NextRequest(`${ORIGIN}/api/house`, { headers: { cookie: `${SESSION}=${sealCookie(SESSION, t!.address, 600)}` } }))).json();
     expect(house.items[0]).toMatchObject({ id: item.id, title: "Test Paper", sender: "Ayu", readers: 2 });
 
-    // the House shows the 5 newest and how many there are; the Papers page loads the rest 20 at a time, newest first
+    // the House shows the 5 newest and how many there are; the Papers page loads the rest 10 at a time, newest first
     expect(house.items.length).toBeLessThanOrEqual(5);
     const page = async (from: string, by = t!.address) => listRoute(new NextRequest(`${ORIGIN}/api/items?from=${from}`, { headers: { cookie: `${SESSION}=${sealCookie(SESSION, by, 600)}` } }));
     const first = await (await page("0")).json();
     expect(first.total).toBe(house.paperCount);
     expect(first.items[0].id).toBe(item.id);
-    expect(first.items.length).toBe(Math.min(20, first.total));
+    expect(first.items.length).toBe(Math.min(10, first.total));
     expect((await (await page(String(first.total))).json()).items).toEqual([]);
     expect((await page("-1")).status).toBe(400);
     expect((await page("0", keysFrom(makeWords()).address)).status).toBe(403);

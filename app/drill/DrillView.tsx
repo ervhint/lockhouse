@@ -1,133 +1,106 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { FileText, KeyRound, Lock, LockOpen } from "lucide-react";
-import { fetchMlkemPublicKey } from "@qorechain/qoreseal/network";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Check, X } from "lucide-react";
+import { envelopeFromText, generateSealKeys, open, parseEnvelope } from "@qorechain/qoreseal";
 import Panel from "@/components/Panel";
 import Button from "@/components/Button";
 import Badge from "@/components/Badge";
-import EmptyState from "@/components/EmptyState";
-import Skeleton from "@/components/Skeleton";
-import { pretendQDay } from "@/lib/drill";
-import { pictureUrl, unpack } from "@/lib/items";
+import { CHAIN_ID, ITEM_PURPOSE } from "@/lib/settings";
 
-type Store = { copies: { id: string; envelope: string }[]; given: { address: string; x25519Secret: string; oldCopy: string }[] };
-type Result = { pictures: string[]; shut: Set<string> };
+type Copy = { id: string; envelope: string; date: string };
+const mb = (n: number) => `${(n / 1024 ** 2).toFixed(1)} MB`;
 
-// S-09: the public store (AC-7.1) and Pretend Q-Day, run in this browser with the old keys members gave (AC-7.3, AC-7.4).
-export default function DrillView({ member }: { member: boolean }) {
-  const [store, setStore] = useState<Store | null>(null);
+// S-09: the Thief's three steps, all real except the broken old lock (AC-7.3, D-19):
+// 1 steal every stored copy (this page downloads them), 2 try to open each with the Thief's own keys (QoreSeal open),
+// 3 Q-Day: the old lock is broken (pretend), and each copy is read to see it still carries ML-KEM-1024.
+export default function DrillView() {
+  const [step, setStep] = useState(0);
+  const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<Result | null>(null);
-  const summary = useRef<HTMLHeadingElement>(null);
-  const router = useRouter();
-  const [faking, setFaking] = useState(false);
-  const [fakeProblem, setFakeProblem] = useState<string | null>(null);
-  const fakeButton = useRef<HTMLButtonElement>(null);
+  const [copies, setCopies] = useState<Copy[]>([]);
+  const [opened, setOpened] = useState(0);
+  const [withMlkem, setWithMlkem] = useState(0);
+  const latest = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { if (step) latest.current?.focus(); }, [step]);
 
-  const load = useCallback(async () => {
+  const steal = async () => {
+    setBusy(true);
     setProblem(null);
     const res = await fetch("/api/drill", { cache: "no-store" }).catch(() => null);
-    if (res?.ok) setStore(await res.json());
-    else setProblem("The stored copies didn't load. Check your connection, then try again.");
-  }, []);
-  useEffect(() => { load(); }, [load]);
-  useEffect(() => { if (result) summary.current?.focus(); }, [result]);
-  useEffect(() => { if (fakeProblem) fakeButton.current?.focus(); }, [fakeProblem]); // the button was off while working, so focus fell away
-
-  const run = async () => {
-    if (!store?.given.length) return setProblem("No old keys yet. A family member must give their old keys to the drill first, from their own window.");
-    setRunning(true);
-    setProblem(null);
-    try {
-      // The Thief also takes each member's public ML-KEM-1024 key from the phone book; it still lacks the secret half.
-      const rest = `${location.origin}/api/chain`;
-      const given = await Promise.all(store.given.map(async (g) => ({ ...g, mlkemPublicKey: await fetchMlkemPublicKey({ rest, address: g.address }) })));
-      const { old, shut } = await pretendQDay(store.copies, given);
-      const pictures = await Promise.all(old.map((o) => pictureUrl(unpack(o.plain))));
-      setResult({ pictures, shut: new Set(shut) });
-    } catch {
-      setProblem("Can't reach QoreChain's phone book. Nothing was tried. Try again.");
-    }
-    setRunning(false);
+    if (res?.ok) { setCopies((await res.json()).copies); setStep(1); }
+    else setProblem("The break-in failed: the store didn't answer. Check your connection, then try again.");
+    setBusy(false);
   };
 
-  // AC-8.1: the server plays a hacked server and slips in a paper with a wrong signature; open it to see it refused.
-  const fake = async () => {
-    setFaking(true);
-    setFakeProblem(null);
-    const res = await fetch("/api/drill/fake", { method: "POST" }).catch(() => null);
-    if (res?.status === 401) return router.push("/sign-in");
-    if (res?.ok) return router.push(`/item/${(await res.json()).id}`);
-    setFakeProblem((res && (await res.json().catch(() => null))?.error) || "The fake paper was not made. Check your connection, then try again.");
-    setFaking(false);
+  // Real attempts: the Thief has keys, just not any reader's. QoreSeal refuses every copy.
+  const tryOpen = () => {
+    const thief = generateSealKeys();
+    setOpened(copies.filter((c) => {
+      try { open({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, envelope: envelopeFromText(c.envelope), keys: thief, aad: new TextEncoder().encode(c.id) }); return true; } catch { return false; }
+    }).length);
+    setStep(2);
   };
 
-  if (!store) return (
-    <Panel className="flex flex-col gap-4">
-      {problem ? <><p role="alert">{problem}</p><Button variant="secondary" onClick={load}>Try Again</Button></> : <><Skeleton /><Skeleton /></>}
-    </Panel>
+  const qday = () => {
+    setWithMlkem(copies.filter((c) => ["hybrid", "mlkem"].includes(parseEnvelope(envelopeFromText(c.envelope)).mode)).length);
+    setStep(3);
+  };
+
+  const size = copies.reduce((n, c) => n + c.envelope.length, 0);
+  const sample = copies.at(-1)?.envelope.slice(0, 240);
+  const head = (n: number, title: string) => (
+    <h2 ref={step === n ? latest : undefined} tabIndex={-1} className="flex items-center gap-3 text-xl font-medium">
+      <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-white/10 text-base">{n}</span>{title}
+    </h2>
+  );
+  const Row = ({ ok, children }: { ok: boolean; children: ReactNode }) => (
+    <li className="flex items-center gap-3 rounded-xl bg-white/6 px-4 py-3">
+      {ok ? <Check className="size-5 text-lime" aria-hidden /> : <X className="size-5 text-amber" aria-hidden />}{children}
+    </li>
   );
 
-  const nothing = !store.copies.length && !store.given.length;
   return (
     <div className="flex flex-col gap-6">
       <Panel className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-medium">Every Stored Copy</h2>
+          {head(1, "Break In")}
           <Badge tone="warn">Simulation</Badge>
         </div>
-        <p className="text-muted">The store is public: anyone can take a copy. Titles, names and readers are not shown here.</p>
-        {nothing ? <EmptyState icon={FileText} title="Nothing Stored Yet" text="Papers put in a house show here as locked copies." /> : (
-          <ul className="flex flex-col gap-2">
-            {store.given.map((g, i) => (
-              <li key={g.address} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white/6 px-4 py-3">
-                <KeyRound className="size-5 text-amber" aria-hidden />
-                <span className="font-medium">Drill Sample {i + 1}</span>
-                <span className="sm:ml-auto">{result ? <Badge tone="warn">Opened</Badge> : <Badge tone="warn">Locked With the Old Lock</Badge>}</span>
-              </li>
-            ))}
-            {store.copies.map((c, i) => (
-              <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white/6 px-4 py-3">
-                <Lock className="size-5 text-lime" aria-hidden />
-                <span className="font-medium">Locked Copy {i + 1}</span>
-                {result && result.shut.has(c.id) && <span className="basis-full text-sm text-muted sm:order-last">The ML-KEM-1024 part is missing.</span>}
-                <span className="sm:ml-auto">{result ? (result.shut.has(c.id) ? <Badge tone="ok">Stayed Shut</Badge> : <Badge tone="warn">Opened</Badge>) : <Badge tone="ok">Locked With ML-KEM-1024</Badge>}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+        {step < 1
+          ? <><p className="text-muted">Lockhouse&apos;s server holds every family&apos;s papers. Get in and take them all.</p>
+              <Button onClick={steal} loading={busy} full>{busy ? "Stealing" : "Break In and Steal Everything"}</Button></>
+          : <p>You got in and stole <b className="font-medium">{copies.length} papers</b> ({mb(size)}). Every family&apos;s, not just one.</p>}
         {problem && <p role="alert" className="text-danger">{problem}</p>}
-        {!result && <>
-          <Button onClick={run} loading={running} full>{running ? "Pretending Q-Day" : "Pretend Q-Day"}</Button>
-          {member && <Button variant="secondary" href="/drill?give">Give My Old Keys to the Drill (Simulation)</Button>}
-        </>}
       </Panel>
 
-      {result && (
+      {step >= 1 && (
         <Panel className="flex flex-col gap-4">
-          <h2 ref={summary} tabIndex={-1} className="text-xl font-medium">Thief (Simulation)</h2>
-          <p className="flex flex-wrap items-center gap-3"><LockOpen className="size-5 text-amber" aria-hidden />Old-Lock Copies <Badge tone="warn">{result.pictures.length} Opened</Badge></p>
-          <p className="flex flex-wrap items-center gap-3"><Lock className="size-5 text-lime" aria-hidden />Lockhouse Copies <Badge tone="ok">{result.shut.size} of {store.copies.length} Stayed Shut</Badge></p>
-          <p className="text-muted">The old keys opened every old-lock copy. Every Lockhouse copy needs the ML-KEM-1024 secret key too, and that never left its owner&apos;s device.</p>
-          {result.pictures.map((u, i) => <img key={i} src={u} alt={`Drill Sample ${i + 1}, opened by the Thief`} className="w-full rounded-xl outline outline-1 -outline-offset-1 outline-white/10" />)}
-          {member && <>
-            <p className="text-muted">Your own papers still open for you, with your own keys.</p>
-            <Button href="/house" full>Open My Papers</Button>
-          </>}
+          {head(2, "Try to Open Them")}
+          {step < 2
+            ? <><p className="text-muted">You have the papers. Now read them.</p>
+                <Button onClick={tryOpen} full>Try to Open Them</Button></>
+            : <>
+                <p className="text-muted">This is what one stolen paper looks like to you:</p>
+                <pre className="overflow-hidden rounded-xl bg-black/40 p-4 text-sm break-all whitespace-pre-wrap text-muted">{sample}…</pre>
+                <p><b className="font-medium">You opened {opened} of {copies.length}.</b> Every one is locked to its family&apos;s keys, and you don&apos;t have them.</p>
+              </>}
         </Panel>
       )}
 
-      {member && (
+      {step >= 2 && (
         <Panel className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-medium">A Fake Drop-In</h2>
-            <Badge tone="warn">Simulation</Badge>
-          </div>
-          <p className="text-muted">Pretend our server was hacked. It slips a paper into your house that says it is from someone else in it, but it can&apos;t sign with their key. Only you can open it.</p>
-          {fakeProblem && <p role="alert" className="text-danger">{fakeProblem}</p>}
-          <Button ref={fakeButton} variant="secondary" onClick={fake} loading={faking}>{faking ? "Making the Fake Paper" : "Try a Fake Drop-In (Simulation)"}</Button>
+          {head(3, "Wait for Q-Day")}
+          {step < 3
+            ? <><p className="text-muted">Keep the papers. One day a quantum computer will break today&apos;s locks. Then try again.</p>
+                <Button onClick={qday} full>It&apos;s Q-Day: Try Again</Button></>
+            : <>
+                <ul className="flex flex-col gap-2">
+                  <Row ok={false}>Old lock (X25519): broken by your quantum computer <span className="text-sm text-muted">(Simulation)</span></Row>
+                  <Row ok>ML-KEM-1024: still holds on {withMlkem} of {copies.length} papers</Row>
+                </ul>
+                <p className="text-xl font-medium">You stole {copies.length} papers. You opened {copies.length - withMlkem}.</p>
+                <p className="text-muted">Apps that use only the old lock would open here. Lockhouse locks every paper with ML-KEM-1024 too, and a quantum computer can&apos;t break it.</p>
+              </>}
         </Panel>
       )}
     </div>
