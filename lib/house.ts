@@ -29,10 +29,13 @@ export async function houseIdOf(address: string): Promise<string | null> {
 
 export const PAGE = 10; // the Papers page loads this many at a time
 
-/** A house's papers newest first, `size` of them from `from`, with no locked copy, and how many it has. */
-export async function papersOf(houseId: string, from: number, size: number) {
-  const { data, error, count } = await db().from("items").select("id, title, readers, stamp, created_at, people(name)", { count: "exact" })
-    .eq("house_id", houseId).order("created_at", { ascending: false }).order("id").range(from, from + size - 1);
+/** A house's papers newest first, `size` of them from `from`, with no locked copy, and how many it has.
+ *  Optional filters: `q`, words in the title (any case); `by`, the sender's address. */
+export async function papersOf(houseId: string, from: number, size: number, { q, by }: { q?: string; by?: string } = {}) {
+  let query = db().from("items").select("id, title, readers, stamp, created_at, people(name)", { count: "exact" }).eq("house_id", houseId);
+  if (q) query = query.ilike("title", `%${q.replace(/[\\%_]/g, "\\$&")}%`); // the typed text is matched as text, never as a pattern
+  if (by) query = query.eq("sender", by);
+  const { data, error, count } = await query.order("created_at", { ascending: false }).order("id").range(from, from + size - 1);
   if (error) throw error;
   // `stamped`: it has a stamp (U11); the paper's own page checks it on chain
   const items = (data as unknown as { id: string; title: string; readers: string[]; stamp: string | null; created_at: string; people: { name: string } }[])

@@ -22,7 +22,10 @@ export async function GET(req: NextRequest) {
   if (!house) return refuse("You are not in a house.", 403);
   const from = Number(req.nextUrl.searchParams.get("from") ?? 0);
   if (!Number.isInteger(from) || from < 0) return refuse("Ask for papers from 0 or more.");
-  return Response.json(await papersOf(house, from, PAGE));
+  const q = req.nextUrl.searchParams.get("q")?.trim().slice(0, 80) || undefined;
+  if (q && q.length < 3) return refuse("Type at least 3 characters to search.");
+  const by = req.nextUrl.searchParams.get("by") || undefined;
+  return Response.json(await papersOf(house, from, PAGE, { q, by }));
 }
 
 // Put In (S-07): store a locked copy only if every check holds; otherwise 400 and nothing stored (AC-5.2, AC-5.3).

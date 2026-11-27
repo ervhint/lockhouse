@@ -15,12 +15,12 @@
 
 Before recording: the three family accounts are set up (padlocks registered on testnet, signed cards published) and the Thief window is open. All papers are made-up samples.
 
-1. **Ayu's house.** Ayu's window shows the house: Ayu, Tari and Ratna, each with a "Padlock in the Phone Book ✓" badge that links to the registration on the testnet explorer.
+1. **Ayu's house.** Ayu's window shows the house (the Members box on House; the full list on Members): Ayu, Tari and Ratna, each with a "Padlock in the Phone Book ✓" badge that links to the registration on the testnet explorer.
 2. **The gate.** Ayu drops in the sample family KK and ticks Tari and Ratna. The screen shows it being locked in this browser ("Locked on This Device · ML-KEM-1024 + X25519 · 3 readers") before it's sent, then stamped on QoreChain (U11). Only the locked copy is stored.
 3. **Tari opens it.** In Tari's window the KK appears, "Put in by Ayu". Tari opens it; it unlocks in her browser, with "Stamped on QoreChain · {date}" (U11).
 4. **Ratna opens the same lock.** In Ratna's window the same single locked copy opens too (one lock, many readers).
-5. **Ratna puts something in for Ayu.** Ratna puts in a private note for Ayu. It's locked to Ayu's padlock and signed. In Ayu's window it shows "From Ratna · Signature Checked on QoreChain ✓".
-6. **The drill (labelled "Simulation").** The Thief window already holds every stored copy (the store is public: a copy opens nothing). The Thief presses "Pretend Q-Day": the Thief is handed the old keys, as a quantum computer would work them out. The old-lock copy of the sample KTP opens; every Lockhouse copy stays shut.
+5. **Ratna puts something in for Ayu.** Ratna puts in a private note for Ayu. It's locked to Ayu's padlock and signed. In Ayu's window it shows "Signature Checked on QoreChain ✓", with Ratna's name under the title.
+6. **The drill (labelled "Simulation").** The Thief window opens the Drill from Welcome (Play the Thief) and plays three steps: Break In and Steal Everything (every stored copy is downloaded: the store is public), Try to Open Them (each copy really refuses: 0 opened), It's Q-Day: Try Again (the old lock is broken, which is the pretend part; every copy still carries ML-KEM-1024). It ends "You stole {n} papers. You opened 0." (D-19)
 7. **The family is still fine.** Back in Tari's window, the KK still opens. End card: the tagline.
 
 Steps 2–6 are each about 10–15 seconds. The account setup (making keys, registering the padlock) is shown in the longer video, not in these 90 seconds.
@@ -40,7 +40,7 @@ Steps 2–6 are each about 10–15 seconds. The account setup (making keys, regi
 
 | | What |
 | --- | --- |
-| **Must** | Sign in with your QoreChain key (Sign In With QoreChain, so only you can add to your house) · add a family member by their qor1 address (their signed card is checked first) · make your keys in the browser from secret words (shown once as the backup) · register the padlock: ML-DSA-87 key with proof of possession, then `MsgRegisterKEMKey`, plus the signed card · the house list (members, their badges) · the gate: lock in the browser for chosen members, store only the locked copy · the house's item list · open in the browser · a family member's signed drop-in, checked against the chain · the drill (old-lock copy + Thief, labelled "Simulation") |
+| **Must** | Sign in with your QoreChain key (Sign In With QoreChain, so only you can add to your house) · add a family member by their qor1 address (their signed card is checked first) · make your keys in the browser from secret words (shown once as the backup) · register the padlock: ML-DSA-87 key with proof of possession, then `MsgRegisterKEMKey`, plus the signed card · the house list (members, their badges) · the gate: lock in the browser for chosen members, store only the locked copy · the house's item list · open in the browser · a family member's signed drop-in, checked against the chain · the drill (the Thief steals every copy, Q-Day, 0 opened; labelled "Simulation") |
 | **Should** | A photo size limit with a clear message · explorer links on every on-chain step |
 | **Could** | Being in several houses (a house picker) · a recovery key · a fake "from Ratna" drop-in being refused on screen · remove a member · group keys that stop a removed member reading new items |
 | **Won't** | Mainnet · an app to install · offline/Bluetooth · messaging · "after I'm gone" · the QoreX wallet as the key holder (it can't give the house its lock keys; see 1.5) |
@@ -52,7 +52,7 @@ Steps 2–6 are each about 10–15 seconds. The account setup (making keys, regi
 - **Gas:** each family account needs test QOR for its two registrations (faucet: 100 per 24 h). The Thief needs none.
 - **Where locked copies go:** a hosted database that only ever holds locked copies (Supabase), reached through our own server routes. Not on chain: a KTP photo is about 150–500 KB, too big for a transaction.
 - **Size:** a locked copy is the file + 56 + 1,664 bytes per reader (3 readers ≈ 5 KB extra).
-- **The drill:** the old-lock copy uses only X25519 (the classical part). The Thief is handed the X25519 secret keys. That opens the old-lock copy, but not the Lockhouse copy, because its ML-KEM-1024 part is still missing. This follows the sponsor's drill: the thief gets the old keys, nothing for the new lock.
+- **The drill:** the Thief steals every stored copy and tries to open each with QoreSeal (all refuse). Q-Day, the old lock (X25519) breaking, is pretend: no one can break it today, and real members' old keys never leave their devices. Each copy is then read to show it still carries ML-KEM-1024, which a quantum computer can't break (D-19; T-0.3 proves the old key alone doesn't open a copy).
 - **Demo windows:** settled at G2 (see [DESIGN.md](DESIGN.md) "G2 answers"): Ayu and Tari on phones, Ratna and the Thief on the PC in two browsers. Build and test with four Chrome profiles.
 
 ### 1.6 Open questions
@@ -71,7 +71,7 @@ Next.js (App Router) + TypeScript + Tailwind · our own server routes for the st
 | ID | Rule | How it's checked |
 | --- | --- | --- |
 | NF-1 | Every screen works at 375px (phones) and 1440px, with no sideways scroll | Chrome at both widths, every page state (TESTS.md "Page states") |
-| NF-2 | Secret words, secret keys, files and notes never leave the browser. The only exception is the drill's X25519 secret key (the old lock), given on purpose and labelled "Simulation" | Network tab on each golden-path step; route tests refuse unknown fields |
+| NF-2 | Secret words, secret keys, files and notes never leave the browser (since D-19 with no exception: the drill no longer takes anyone's old key) | Network tab on each golden-path step; route tests refuse unknown fields |
 | NF-3 | Only the testnet: chain id `qorechain-diana`, REST https://api-testnet.qore.host. No setting can point the app at mainnet | One constant in one settings module; the chain pass-through only knows the testnet host |
 | NF-4 | A file can be up to **2 MB** (a phone photo of a paper fits; Vercel accepts 4.5 MB per request, and the locked copy is sent as text, about 1.35× bigger) | U5 too-big test |
 | NF-5 | On the PC: locking 500 KB for 3 readers takes under 2 s, and opening it under 2 s (chain checks not counted) | Timed in Chrome in U5 and U6 |
@@ -99,7 +99,6 @@ erDiagram
   houses ||--|{ house_members : has
   houses ||--o{ items : holds
   people ||--o{ items : "puts in"
-  people ||--o| drill_keys : "may give"
   people {
     text address PK "qor1..."
     text name
@@ -132,15 +131,9 @@ erDiagram
     text stamp "U11: hash of the stamp transaction on QoreChain; null = not stamped"
     timestamptz created_at
   }
-  drill_keys {
-    text address PK
-    text x25519_secret "the old key, given for the simulation"
-    text old_copy "drill sample locked with the old lock"
-    timestamptz created_at
-  }
 ```
 
-One migration file per unit that adds tables (U3: people, houses, house_members · U5: items · U7: drill_keys · U10: recovery columns · U11: items.stamp), applied to **Staging** `egtxrdfhmtdiujdiywkm` only.
+One migration file per unit that adds tables (U3: people, houses, house_members · U5: items · U7: drill_keys, dropped again on 27 Nov by `20261127000000_drill_own_keys.sql` (D-19) · U10: recovery columns · U11: items.stamp), applied to **Staging** `egtxrdfhmtdiujdiywkm` only.
 
 ### 3.3 Server routes (the BFF)
 
@@ -149,11 +142,12 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 | `GET/POST /api/chain/[...path]` | anyone | Pass-through to the testnet REST, only for the paths the kits use (account info, balances, PQ key, KEM key, simulate, broadcast, tx lookup; U11 adds tx encode, which `inspectTransaction` uses to get a committed transaction's bytes). The kits take a `rest` address, so the browser gives them `/api/chain` (D-03) |
 | `GET /api/auth/nonce` · `POST /api/auth/verify` · `POST /api/auth/sign-out` | anyone | Sign In With QoreChain (U3) |
 | `GET /api/house` · `POST /api/house/members` | house members | House, members, item list; add a member (U4, U5) |
+| `GET /api/items?from=N&q=&by=` | house members | The Papers page: 10 papers at a time, newest first, with the count; `q` finds words in the title (3 characters or more, any case, matched as text), `by` keeps one sender (D-18) |
 | `POST /api/items` · `GET /api/items/[id]` | house members | Put in; get one item for a reader (U5, U6). U11: a put-in may carry its stamp (a tx hash), stored only if it checks out on chain; readers get it back |
-| `GET /api/drill` · `POST /api/drill` | anyone · members | Every stored copy with no title, names or readers (`id, envelope`), plus the old-lock copies and given old keys; give my old keys (U7). One route instead of the planned `/api/copies` + `/api/drill`: the Drill needs both at once |
+| `GET /api/drill` | anyone | Every stored copy (`id, envelope, date`), with no title, names or readers: the Thief's loot (U7, D-19). Replaces the planned `/api/copies`. `POST /api/drill` (give my old keys) was removed on 27 Nov |
 | `POST /api/house/recovery` | members | Give the house its recovery key (U10): the public half and a lookup, signed by me and checked on chain. Once per house (409 after) |
 | `POST /api/recover` | anyone | Open With Recovery Words (U10): the lookup made from the words finds the papers locked to that key (copy, title, sender); 404 if none. No sign-in |
-| `POST /api/drill/fake` | members | Try a Fake Drop-In (U8, Simulation): plays a hacked server. Locks a made-up note to me, signs it with a throwaway key and stores it as if another member of my house sent it. Opening it shows Signature Not Proven |
+| `POST /api/drill/fake` | members | Try a Fake Drop-In (U8, Simulation): plays a hacked server. Locks a made-up note to me, signs it with a throwaway key and stores it as if another member of my house sent it. Opening it shows Signature Not Proven. Since 27 Nov no page has its button (no drill on the family side); it stays to make a fake paper for the video, and for T-8.1 |
 
 ### 3.4 Env vars
 
@@ -163,10 +157,10 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 
 **Asset flows.** The only money that moves is test QOR for gas: each family account pays the network a small fee (about 0.04 test QOR per registration at 0.1 uqor per gas) for its own two registrations. Test QOR comes from the faucet (100 per 24 h). No contract, no transfers between people, no tokens. U11: each paper put in costs its sender one more small fee (the stamp: 1 uqor sent to themselves, plus gas). The Thief and the server hold no QOR.
 
-**Permissions.** No admin and no contract. The person who starts a house is its owner; any member can add someone (G2). Any member can remove another member, not themselves (U9); the removed person gets an empty house of their own. The server can't open any paper or forge a signature. It *could* hide or delete a locked copy, or refuse to store one; that is in the README limits.
+**Permissions.** No admin and no contract. The person who starts a house is its owner; any member can add someone (G2). Any member can remove another member, not themselves (U9; kept by Laras on 27 Nov, D-20); the removed person gets an empty house of their own. The server can't open any paper or forge a signature. It *could* hide or delete a locked copy, or refuse to store one; that is in the README limits.
 
 **Invariants (must always hold):**
-- INV-1: the server never receives secret words, an ML-KEM-1024 secret key, an ML-DSA-87 secret key, a file or a note. (Only the drill's X25519 key, on purpose.)
+- INV-1: the server never receives secret words, an ML-KEM-1024 secret key, an ML-DSA-87 secret key, an X25519 secret key, a file or a note.
 - INV-2: every stored item's signature checks out against its sender's ML-DSA-87 key on chain, over `lockhouse-item-v1|{houseId}|{itemId}|{title}|{sha256 of the envelope}`.
 - INV-3: every reader of an item was a member of that house, with a card that checked out against the chain, when it was put in. The sender is always a reader.
 - INV-4: an envelope opens only with its own item id as AAD (extra data that is checked but not hidden), so a copy can't be moved to another item.
@@ -279,7 +273,7 @@ Tests: T-5.1 (e2e golden), T-5.2 (integration: route refuses unknown fields), T-
 ### U6 — Open a paper and see who put it in  (Must · demo-critical)
 Covers: US-12, US-13      Screens: S-08      Depends on: U5      Est: 2.5h      Model: Sonnet 5.5 · medium
 Acceptance:
-- AC-6.1 Given I'm a reader, when I open a paper, then the browser checks the signature against the sender's ML-DSA-87 key on chain, opens the envelope with my keys and shows the picture, PDF or note with "From {senderName} · Signature Checked on QoreChain".
+- AC-6.1 Given I'm a reader, when I open a paper, then the browser checks the signature against the sender's ML-DSA-87 key on chain, opens the envelope with my keys and shows the picture, PDF or note with "Signature Checked on QoreChain" and the sender's name under the title.
 - AC-6.2 Given two other readers, when each opens the same paper in their own window, then it opens for each, from the one stored copy (one row in the database).
 - AC-6.3 Given I'm in the house but not a reader, then "This Paper Is Not for You" shows and the locked copy isn't sent to me.
 - AC-6.4 Given the signature doesn't check out (title or copy changed in the database), then "Signature Not Proven" shows above a blurred preview (or no preview if it can't be opened), and there is no Download.
@@ -294,16 +288,16 @@ Golden step 5 (a member puts something in for the owner) is U5 + U6 with one oth
 
 ### U7 — The Q-Day Drill (Simulation)  (Must · demo-critical)
 Covers: US-14, US-15      Screens: S-09      Depends on: U6      Est: 3h      Model: Opus 5.5 · medium
-QoreSeal has no "old lock only" mode, so the drill's old lock is ours: X25519 + HKDF-SHA-256 (both from QoreSeal's own exports) + AES-256-GCM (the browser's built-in WebCrypto). The drill sample is a made-up paper picture that ships with the app.
-Acceptance:
-- AC-7.1 Given anyone (no keys, not signed in, like the Thief window), when they open the Drill, then it lists every stored copy with no title, names or readers: Lockhouse copies marked "Locked With ML-KEM-1024" and old-lock copies marked "Locked With the Old Lock". "Simulation" shows on the page at all times.
-- AC-7.2 Given a signed-in member, when they press Give My Old Keys to the Drill (Simulation) and confirm, then their browser locks the drill sample with the old lock to their own X25519 key and sends that old-lock copy and their X25519 secret key, and nothing else (no secret words, no ML-KEM-1024 or ML-DSA-87 key).
-- AC-7.3 Given given old keys, when the Thief presses Pretend Q-Day, then, in the Thief's browser, each old key is tried on every stored copy: every old-lock copy opens and shows the drill sample; every Lockhouse copy stays shut, with the reason ("the ML-KEM-1024 part is missing").
-- AC-7.4 Given no old keys were given yet, when the Thief presses Pretend Q-Day, then the page says a family member must give their old keys first.
-- AC-7.5 Given the drill ran, when a member opens their papers, then they still open (T-6.1 run again).
-- AC-7.6 Given the old lock alone, then it opens with the right X25519 key and fails with any other.
+Rebuilt on 27 Nov (D-19). Built first (24 Nov) with an old lock of our own and members giving their old keys; Laras found that confusing (a family member "helping" the thief, and a page that looked staged), so the drill is now the Thief's own page.
+
+- AC-7.1 Given anyone, signed in or not, when they open the Drill (only linked from Welcome: Play the Thief), then it shows the stranger's header (no member name, no family menu) and "Simulation" at all times. No family page links to it.
+- AC-7.2 Given Break In and Steal Everything, then the page downloads every stored copy (`GET /api/drill`: id, locked copy, date; no title, names or readers) and says how many and how big.
+- AC-7.3 Given Try to Open Them, then each copy is tried with QoreSeal `open` and the Thief's own keys, all refuse, and the page shows one real copy's scrambled text and "You opened 0 of {n}".
+- AC-7.4 Given It's Q-Day: Try Again, then the old lock (X25519) shows as broken, labelled Simulation; each copy is read (`parseEnvelope`) and still carries ML-KEM-1024; the page ends "You stole {n} papers. You opened 0."
+- AC-7.5 Given the drill ran, when a member opens their papers, then they still open (the drill only reads copies).
+- AC-7.6 Given a reader's old key (X25519) but not their ML-KEM-1024 key, then a Lockhouse copy doesn't open (T-0.3).
 - AC-7.7 Given the whole app, then no page uses `?state=` and the prototype's StatePicker is deleted (and removed from AGENTS.md).
-Tests: T-7.1 (e2e golden), T-7.2 (e2e + network check), T-7.3 (e2e golden), T-7.4 (e2e), T-7.5 (e2e golden), T-7.6 (unit), T-7.7 (code search)
+Tests: T-7.1 (e2e golden + route), T-7.2 (route), T-7.3 (e2e golden), T-7.4 (e2e golden), T-7.5 (e2e golden), T-7.6 = T-0.3 (unit), T-7.7 (code search)
 
 **Checkpoint:** after U7 the whole golden path (§1.2) runs on localhost in four Chrome profiles.
 
@@ -355,13 +349,16 @@ Built 26 Nov: `lib/stamp.ts` (`stamp`, `checkStamp`), sent through the padlock's
 | D-08 | 23 Nov | Locked copies are stored as text (`envelopeToText`) in Postgres, not in Supabase Storage | 2 MB limit; one table; no file bucket rules |
 | D-09 | 23 Nov | Each envelope uses purpose `lockhouse-item` and its item id as AAD; the signature covers house, item, title and the envelope's hash | A copy can't be moved to another item or retitled without the signature failing |
 | D-10 | 23 Nov | Every member's padlock badge is read live from the chain | The badge proves what the phone book says, not what our database says |
-| D-11 | 23 Nov | The drill's old lock is our own: X25519 + HKDF-SHA-256 + AES-256-GCM. The Thief gets only X25519 secret keys, given on purpose by members | QoreSeal has no X25519-only mode; this follows the sponsor's drill (the thief gets the old keys, nothing for the new lock) |
-| D-12 | 23 Nov | The store is public through `/api/copies` (copies only, no titles, names or readers); titles are seen only by house members | The golden path says a copy opens nothing; titles are kept from strangers |
+| D-11 | 23 Nov | *(Replaced by D-19, 27 Nov.)* The drill's old lock is our own: X25519 + HKDF-SHA-256 + AES-256-GCM. The Thief gets only X25519 secret keys, given on purpose by members | QoreSeal has no X25519-only mode; this follows the sponsor's drill (the thief gets the old keys, nothing for the new lock) |
+| D-12 | 23 Nov | The store is public through `/api/copies` (built as `GET /api/drill`) (copies only, no titles, names or readers); titles are seen only by house members | The golden path says a copy opens nothing; titles are kept from strangers |
 | D-13 | 23 Nov | S-10 loses its "Rejected" state: pressing Sign In With My Key is the approval. S-04 keeps its two approvals with Not Now | Keys live in the page, so there is no wallet pop-up to say no to at sign-in |
 | D-14 | 23 Nov | The sender is always a reader of what they put in | They can see what they sent; one rule |
 | D-15 | 23 Nov | The test plan was written in the main chat, not by a subagent | All acceptance criteria were already here; a subagent would re-read everything |
 | D-16 | 24 Nov | The recovery key is a plain QoreSeal key from its own 24 words, not an account: no padlock on chain. Its public half is signed by the member who made it; the words find their papers through a SHA-256 lookup only they give (members see the public key, so it can't be the lookup). One per house; removing its maker drops it | QoreSeal's "recovery recipient (an offline key)". No test QOR or chain step; the signature keeps a hacked server from adding its own reader |
 | D-17 | 26 Nov | U11's stamp is a `MsgSend` of 1 uqor to yourself with the fingerprint in the memo, signed hybrid like the padlock (D-04). Stamp before saving: if it fails, nothing is saved. The server checks a stamp but doesn't require one; readers check it again themselves | The testnet has no module for notes, and a memo on a self-transfer is visible in any explorer. Failing before saving keeps "every new paper is stamped" simple. Readers trusting their own check, not the server's, is the rule since D-10 |
+| D-18 | 27 Nov | The menu is House · Members · Papers · {name} (Put In left the menu; its button is on House and Papers). House shows 5 members, the 5 newest papers and the recovery key; Members and Papers have the full lists. Papers loads 10 at a time with Show More Papers (not on scroll), and filters on the server: title words (Enter, 3 characters or more) and From | Laras's rework: one job per page. A filter has to run on the server, because the browser holds only the loaded papers |
+| D-19 | 27 Nov | The drill is the Thief's page, the same for everyone and linked only from Welcome: steal every copy, try to open them (real QoreSeal refusals), then Q-Day (pretend) and read that each copy still carries ML-KEM-1024. Members give nothing; `drill_keys`, `POST /api/drill`, our old lock and the sample picture are gone. The family pages have no drill and no Fake Drop-In button. Replaces D-11 | A member giving their old key put the family inside the thief's story, and a page that makes its own sample looked staged. Real members' old keys never leave their devices, so only the break itself can be pretend. The server now holds no secret key at all |
+| D-20 | 27 Nov | Any member can still remove another (U9 unchanged) | Laras kept it when asked on 27 Nov |
 
 ## 6. Open questions
 

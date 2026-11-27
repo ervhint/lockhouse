@@ -64,7 +64,7 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 ## Shared components
 
 - Button · `components/Button.tsx` · the one button (primary/secondary/ghost/danger, `loading`, `href` makes it a link, `newTab` for other sites; `aria-label` works on both). Minimum height, so a label that wraps on a phone gets room (override with `min-h-…!`)
-- Input · `components/Input.tsx` · text field, textarea (`multiline`) and file field with label, hint, error
+- Input · `components/Input.tsx` · text field, textarea (`multiline`), dropdown (`options`) and file field with label, hint, error
 - Checkbox · `components/Checkbox.tsx` · checkbox row (reader picker, confirmations); `radio` makes it a radio row (File or Note on Put In)
 - Panel · `components/Panel.tsx` · the one card surface
 - Badge · `components/Badge.tsx` · status pill (ok/warn/bad/wait, each with an icon); `href` makes it a link to another site (explorer), with an external-link icon
@@ -77,10 +77,11 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 - Heading · `components/Heading.tsx` · page title + one sentence; the h1 takes focus from script (`tabIndex=-1`) for views that change in place
 - PaperView · `components/PaperView.tsx` · an opened paper: signature badge, preview (blurred when not proven), Download, a back action (Item page and Open With Recovery Words)
 - Words · `components/Words.tsx` · 24 secret words in a numbered grid (S-03 backup, recovery key)
-- AppShell · `components/AppShell.tsx` · header, night background; `signedIn` shows the nav + UserMenu
+- AppShell · `components/AppShell.tsx` · header, night background; `signedIn` shows the nav (House · Members · Papers) + UserMenu; the Drill passes `signedIn={false}` so it always shows the stranger's header
 - UserMenu · `components/UserMenu.tsx` · signed-in menu: name from this browser, Sign Out, Forget Keys; no keys → Welcome (AC-3.7); exports `signOut()`
 - Logo · `components/Logo.tsx` · the sun-ray mark
-- Hero · `components/Hero.tsx` (+ `hero.css`) · Welcome screen from sample 02 (fog, Today / After Q-Day switch)
+- Hero · `components/Hero.tsx` (+ `hero.css`) · Welcome screen from sample 02 (fog, Today / After Q-Day switch); the only link to the Drill (Play the Thief, `.cta.alt` outline button)
+- PaperList, NoPapers, PutInButton · `app/house/HouseView.tsx` · the one paper row (title · sender + date · readers · Stamped badge), used by House and Papers; the member row is in the same file (House and Members)
 
 ## Agent skills
 

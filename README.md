@@ -25,9 +25,9 @@ The rule: **this is a house, not everyone can enter.**
 4. **Build the house.** Add the people you trust by their `qor1` address. Their card is checked against the chain first.
 5. **Put in a paper.** Pick a file or write a note, tick who can open it. It is locked on your device (ML-KEM-1024 + X25519, one locked copy for all readers), signed with your key, and **stamped on QoreChain** before anything is sent. The server only ever stores the locked copy.
 6. **Open it.** A reader's browser checks the sender's signature and the paper's stamp on chain, then opens the copy. A paper with a signature that doesn't check out is shown blurred, with "Signature Not Proven". The stamp shows when the paper was put in ("Stamped on QoreChain · {date}"), or "Not Stamped", or "Stamp Doesn't Match".
-7. **The Q-Day Drill (Simulation).** Members can hand the drill their old key (X25519). A "Thief" with every stored copy and those old keys pretends Q-Day: copies locked the old way open, every Lockhouse copy stays shut, because it also needs the ML-KEM-1024 secret key that never left its owner's device.
+7. **The Q-Day Drill (Simulation).** Anyone can play the thief, no account needed: **Play the Thief** on the Welcome page. Break in and steal every stored copy, try to open them (QoreSeal really refuses each one), then wait for Q-Day: the old lock (X25519) breaks, and still nothing opens, because every copy also carries ML-KEM-1024. It ends "You stole {n} papers. You opened 0."
 
-Also built: remove someone from the house, a fake drop-in (a pretend hacked server slips in a paper it can't sign), and a **recovery key** for the house (a second set of 24 words, kept on paper, that is one more reader of every paper put in after it was made).
+Also built: remove someone from the house, a Papers page with search (title words and sender), a fake drop-in (a pretend hacked server slips in a paper it can't sign; no button in the app, used for the video and the tests), and a **recovery key** for the house (a second set of 24 words, kept on paper, that is one more reader of every paper put in after it was made).
 
 ## How it works
 
@@ -92,8 +92,8 @@ What Lockhouse does not do, in plain words:
 - **The member list lives on our server.** The server can't open a paper or fake a signature, but a hacked server could hide, delete or refuse to store a locked copy, or add a stranger to the member list. Lockhouse shows every member by name and address, and who made the recovery key; check the list before you pick readers.
 - **Names are what each person types.** They are not unique; the address next to each name is what counts.
 - **Any member can add someone whose own house is empty,** without asking them first.
-- **The drill is pretend, and says so.** Only the Thief's power is pretend; everything else really runs on testnet. Giving your old key to the drill publishes your X25519 key, so after that your papers rest on ML-KEM-1024 alone. Use test accounts for the drill.
-- **The fake drop-in is real data.** It stores a marked paper ("Fake Drop-In (Simulation)") in your house list.
+- **The drill is pretend, and says so.** The steal and the failed opening are real (the store is public, and QoreSeal refuses each copy). Only Q-Day is pretend: no one can break X25519 today, and members' old keys never leave their devices, so the page shows the old lock as broken and then reads that each copy still carries ML-KEM-1024. Test T-0.3 does the real check: a reader's X25519 key without their ML-KEM-1024 key doesn't open a copy.
+- **The fake drop-in is real data.** It stores a marked paper ("Fake Drop-In (Simulation)") in your house list. The app has no button for it; it is made through its route for the video and the tests.
 - **QoreSeal is a draft.** QoreChain calls it a draft until an outside review before version 1.0.
 - **It runs on QoreChain's test network.** The explorer link opens on Mainnet; switch it to Testnet at the top.
 
@@ -105,7 +105,7 @@ Checked on 24 Nov 2026 with Claude Code (`/code-review` and a manual pass over e
 
 - **Fixed:** opened SVG pictures were shown from a `blob:` URL, which carries this site's origin; opened in their own tab, a crafted SVG could have run script here and read the secret words. They now show from a `data:` URL. Other sites can no longer put Lockhouse in a frame (`frame-ancestors 'self'`). Put In now names who made the recovery key. Smaller fixes: a title with spaces around it, a future-dated sign-in message, a clearer error when the recovery key changed mid-put-in.
 - **Checked, nothing found:** no secret in the git history (gitleaks, all commits) or in the browser files (`check:build`); `npm audit` 0 for production packages; every member route checks the session and the house; the chain pass-through only reaches a fixed list of testnet paths; the database is closed to the public Supabase API.
-- **Left open (see Honest limits):** the server holds the member list; no rate limits; the chain pass-through forwards any signed testnet transaction; the drill publishes the old keys it is given.
+- **Left open (see Honest limits):** the server holds the member list; no rate limits; the chain pass-through forwards any signed testnet transaction.
 
 ## Credits
 

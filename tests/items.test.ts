@@ -108,6 +108,17 @@ describe.runIf(ayu && tari)("POST /api/items (testnet + Staging)", () => {
     expect((await (await page(String(first.total))).json()).items).toEqual([]);
     expect((await page("-1")).status).toBe(400);
     expect((await page("0", keysFrom(makeWords()).address)).status).toBe(403);
+
+    // filters: words in the title (any case, typed text never a pattern) and the sender
+    const word = item.title.slice(1, 6).toUpperCase();
+    const found = await (await page(`0&q=${encodeURIComponent(word)}`)).json();
+    expect(found.items.map((i: { id: string }) => i.id)).toContain(item.id);
+    expect(found.items.every((i: { title: string }) => i.title.toUpperCase().includes(word))).toBe(true);
+    expect((await (await page("0&q=%25%25%25")).json()).total).toBe(0);
+    expect((await page("0&q=ab")).status).toBe(400); // at least 3 characters
+    const mine = await (await page(`0&by=${a!.address}`)).json();
+    expect(mine.items.map((i: { id: string }) => i.id)).toContain(item.id);
+    expect((await (await page("0&by=nobody")).json()).total).toBe(0);
   }, 60_000);
 
   // T-5.3 a non-member reader, a broken envelope, a wrong entry count, a bad signature: 400, nothing stored.

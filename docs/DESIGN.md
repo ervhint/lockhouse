@@ -20,8 +20,8 @@
 | US-10 | Must | step 5 | What I put in for someone carries my signature (QoreSign) |
 | US-11 | Must | step 3 | See the house items and who put each one in |
 | US-12 | Must | steps 3–4 | Open an item in my own browser; one locked copy, many readers |
-| US-13 | Must | step 5 | "From Ratna · Signature Checked on QoreChain ✓" (the sender's own name) |
-| US-14 | Must | step 6 | Thief presses "Pretend Q-Day" (Simulation): old-lock copy opens, Lockhouse copies stay shut |
+| US-13 | Must | step 5 | "Signature Checked on QoreChain ✓", with the sender's own name under the title |
+| US-14 | Must | step 6 | The Thief (a stranger, from Welcome) breaks in and steals every stored copy, tries to open them (0 opened), then Q-Day breaks the old lock (Simulation) and still 0 open: every copy carries ML-KEM-1024 |
 | US-15 | Must | step 7 | After the drill, my items still open |
 | US-16 | Could | | Recovery key |
 | US-17 | Could | | A fake "from Ratna" item refused on screen |
@@ -38,10 +38,11 @@
 | S-03 | Secret Words Backup (shown once) | US-01 | shown; confirm you saved them |
 | S-04 | Register Padlock | US-03, US-07 | not enough test QOR (faucet link); sign 1 of 2; sign 2 of 2; I said no to signing (nothing sent, try again); pending; confirmed; failed (explorer link, retry) |
 | S-05 | House (members + items) | US-05, US-06, US-11, US-18 | loading; no other members yet; no items yet; "list updating…"; menu: Sign Out, Forget Keys on This Device (asks first: words needed to come back); Remove {memberName} sheet (`?remove={qorAddress}`: asks first, says what they opened stays on their device; removing, failed, removed toast) |
+| S-05b | Members (`/members`) and Papers (`/papers`), split out of House on 27 Nov (D-18) | US-05, US-11, US-18 | Members: full list (me first, then A–Z), Add Someone, Remove {memberName} sheet. Papers: count, 10 at a time with Show More Papers; Search Titles (Enter, 3 characters or more; too short: "Type at least 3 characters.") and From (Everyone, {memberName} (You), others); No Papers Match + Clear Filters. House keeps 5 members, the 5 newest papers and the recovery key |
 | S-06 | Add Member | US-06 | checking card; no padlock in phone book; bad card; added |
 | S-07 | Gate (Put In) | US-08, US-09, US-10, US-20 | choose file or note; pick readers; too big; locking; signing; stamping on QoreChain (U11); stamp failed (nothing saved, reason in plain words); saved ("Put in and stamped on QoreChain"); save failed (nothing sent) |
 | S-08 | Item | US-12, US-13, US-17, US-20 | opening; opened + "Signature Checked"; not for you; signature not proven. U11 stamp: "Stamped on QoreChain · {date}" (links to the explorer); "Not Stamped on QoreChain"; "Stamp Doesn't Match This Paper", each with one line saying what it means |
-| S-09 | Drill (Simulation) | US-14, US-15, US-17 | all stored copies listed; Pretend Q-Day running; result; A Fake Drop-In (members): making the fake paper, failed (no one else in the house, no connection), then S-08 shows Signature Not Proven |
+| S-09 | Drill (Simulation), the Thief's page (D-19) | US-14, US-15 | always the stranger's header; linked only from Welcome (Play the Thief). 1 Break In: Break In and Steal Everything → "stole {n} papers ({size})"; store not reached. 2 Try to Open Them → one copy's scrambled text, "You opened 0 of {n}". 3 Wait for Q-Day: It's Q-Day: Try Again → old lock broken (Simulation), ML-KEM-1024 holds on {n} of {n}, "You stole {n} papers. You opened 0." The Fake Drop-In has no button since 27 Nov |
 | S-10 | Sign In With QoreChain | US-04 | signing; rejected; failed |
 | S-11 | Make a Recovery Key (`/house/recovery`, U10) | US-16 | words shown once; tick "I wrote the recovery words on paper"; saving; failed (words stay on screen); already has one. House gets a Recovery Key panel (none yet / made by {memberName}) and a saved toast; Put In shows a note under Who Can Open It: the house's recovery key (made by {memberName}) can open it too (not a row: it is not a person; Laras, 25 Nov) |
 | S-12 | Open With Recovery Words (`/recover`, U10, no sign-in) | US-16, US-20 | wrong words; no papers for these words; list; opening; the paper (S-08's view, with its stamp); can't reach QoreChain. Linked from Restore Your Keys and the House panel |
@@ -63,7 +64,7 @@ Demo people (made up, not Laras's family): **Ayu** (the house owner), **Tari** (
 3. **Sign In (US-04):** Must. Without it our server can't tell who is asking.
 4. **Demo devices:** four separate browsers. Ayu and Tari on their phones (Chrome), Ratna on the PC, the Thief on the PC in another browser (Edge). So every screen must work at phone width. Phones can't open the PC's localhost, so building and testing use four Chrome profiles on the PC; the real-device recording happens after the P7 deploy.
 5. **One gate, every item signed:** Laras left it to me. Every item is signed by the person who put it in, and every item shows "Put in by <name> · Signature Checked ✓". One rule, and QoreSign shows on every item.
-6. **The drill's old keys:** Laras left it to me. Only the drill's made-up sample KTP has an old-lock copy. Each family member's window has a "Give My Old Keys to the Drill (Simulation)" button, so the Thief can show those keys don't open Lockhouse copies.
+6. **The drill's old keys** *(replaced 27 Nov by D-19: members give nothing; the Thief steals the real copies)*: Laras left it to me. Only the drill's made-up sample KTP has an old-lock copy. Each family member's window has a "Give My Old Keys to the Drill (Simulation)" button, so the Thief can show those keys don't open Lockhouse copies.
 
 Added to the flow at G2: empty states, Sign Out / Forget Keys, and "I said no to signing" on S-04.
 
@@ -97,7 +98,7 @@ Ten references from Laras (`internal/design-references/design-references-01…10
 
 **Tokens** (from sample 02, in `app/globals.css`): night `#0b1426`, slate `#1b2736`, mist `#eef1f6`, muted `#b4bfce`, lime `#e2ee9f` (primary action), amber `#e8a066` (warnings), danger `#f4a08e`. Font: Instrument Sans (400/500/600). Pills for buttons, 16px panels. Motion: only the Welcome fog and switch; app pages are calm; reduced-motion respected.
 
-**Routes:** `/` S-01 · `/keys` S-02 · `/keys/backup` S-03 · `/padlock` S-04 · `/house` S-05 · `/house/add` S-06 · `/put-in` S-07 · `/item/[id]` S-08 · `/drill` S-09 · `/sign-in` S-10 · `/house/recovery` S-11 · `/recover` S-12 (U10). Every state in the inventory is reachable with `?state=…` (the "Prototype States" box bottom-left lists them). BFF mock: `GET /api/house` (data in `lib/mock.ts`, all `{placeholders}`). (P4 prototype only: the `?state=` jumps, StatePicker and `lib/mock.ts` were removed in U7.)
+**Routes:** `/` S-01 · `/keys` S-02 · `/keys/backup` S-03 · `/padlock` S-04 · `/house` S-05 · `/members` `/papers` S-05b · `/house/add` S-06 · `/put-in` S-07 · `/item/[id]` S-08 · `/drill` S-09 · `/sign-in` S-10 · `/house/recovery` S-11 · `/recover` S-12 (U10). Every state in the inventory is reachable with `?state=…` (the "Prototype States" box bottom-left lists them). BFF mock: `GET /api/house` (data in `lib/mock.ts`, all `{placeholders}`). (P4 prototype only: the `?state=` jumps, StatePicker and `lib/mock.ts` were removed in U7.)
 
 **Image list:** S-01 uses the 6 house pictures in `public/img/house/`. S-02 to S-10 use the night sky picture (blurred, dimmed) behind the header; no other pictures. Icons: lucide. Nothing missing.
 
