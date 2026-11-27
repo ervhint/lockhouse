@@ -1,10 +1,10 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import { envelopeFromText, envelopeToText, open, parseEnvelope, seal } from "@qorechain/qoreseal";
+import { envelopeFromText, envelopeToText, open, parseEnvelope, seal, type SealRecipient } from "@qorechain/qoreseal";
 import { NextRequest } from "next/server";
 import { keysFrom, makeWords } from "../lib/keys";
 import { signCard } from "../lib/padlock";
-import { MAX_FILE, fileProblem, itemText, lockItem, openItem, pack, signItem, titleProblem, unpack } from "../lib/items";
+import { MAX_FILE, fileProblem, itemText, lockCopy, lockItem, openItem, pack, signItem, titleProblem, unpack, type Item } from "../lib/items";
 import { stamp } from "../lib/stamp";
 import { CHAIN_ID, ITEM_PURPOSE, REST } from "../lib/settings";
 import { db } from "../lib/db";
@@ -13,7 +13,7 @@ import { checkRecovery } from "../lib/recovery";
 import { SESSION, seal as sealCookie } from "../lib/session";
 import { GET as listRoute, POST as putInRoute } from "../app/api/items/route";
 import { GET as houseRoute } from "../app/api/house/route";
-import { GET as getItemRoute } from "../app/api/items/[id]/route";
+import { GET as getItemRoute, PUT as changeRoute } from "../app/api/items/[id]/route";
 
 const ayu = process.env.TEST_MNEMONIC_1; // padlock on testnet, Ayu's house holds Ayu and Tari on Staging
 const tari = process.env.TEST_MNEMONIC_2;
@@ -39,6 +39,18 @@ describe.runIf(ayu && tari)("lockItem (testnet)", () => {
     expect(parseEnvelope(env)).toMatchObject({ mode: "hybrid", entries: [{}, {}] });
     const aad = new TextEncoder().encode(item.id);
     expect(unpack(open({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, envelope: env, keys: t.seal, aad }))).toEqual(file);
+    expect(() => open({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, envelope: env, keys: t.seal, aad: new TextEncoder().encode(randomUUID()) })).toThrow();
+  });
+
+  // T-12.4 Change Readers locks the same paper again: a given id is kept, and the copy opens only with it (INV-4)
+  it("keeps a given item id", async () => {
+    const [a, t] = [keysFrom(ayu!), keysFrom(tari!)];
+    const file = { name: "n.txt", type: "text/plain", bytes: new Uint8Array([4, 5]) };
+    const id = randomUUID();
+    const copy = await lockCopy(file, [signCard(a), signCard(t)], REST, [], id);
+    expect(copy.id).toBe(id);
+    const env = envelopeFromText(copy.envelope);
+    expect(unpack(open({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, envelope: env, keys: t.seal, aad: new TextEncoder().encode(id) }))).toEqual(file);
     expect(() => open({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, envelope: env, keys: t.seal, aad: new TextEncoder().encode(randomUUID()) })).toThrow();
   });
 });
@@ -190,6 +202,7 @@ describe.runIf(ayu && tari && ratna)("GET /api/items/[id] and openItem (testnet 
     expect(notYou).toMatchObject({ reader: false, senderName: "Ayu", title: "Open Me" });
     expect(notYou.envelope).toBeUndefined();
     expect(notYou.signature).toBeUndefined();
+    expect(notYou.readerNames).toBeUndefined(); // only readers see who the readers are
     expect((await getItem(keysFrom(makeWords()).address, item.id)).status).toBe(403);
     expect((await getItem(a!.address, randomUUID())).status).toBe(404);
   }, 60_000);
@@ -204,4 +217,82 @@ describe.runIf(ayu && tari && ratna)("GET /api/items/[id] and openItem (testnet 
     expect(swapped.proven).toBe(false);
     expect(swapped.paper?.bytes).toEqual(new Uint8Array([9])); // opens, but must show "Signature Not Proven" and no Download
   }, 60_000);
+});
+
+const change = (by: string | null, id: string, body: unknown) =>
+  changeRoute(new NextRequest(`${ORIGIN}/api/items/${id}`, { method: "PUT", headers: by ? { cookie: `${SESSION}=${sealCookie(SESSION, by, 600)}` } : {}, body: JSON.stringify(body) }), { params: Promise.resolve({ id }) } as never);
+const rowOf = async (id: string) => (await db().from("items").select("envelope, signature, readers, size, recovery, stamp, changed_at").eq("id", id).single()).data!;
+
+describe.runIf(ayu && tari)("PUT /api/items/[id] Change Readers (testnet + Staging)", () => {
+  const [a, t] = ayu && tari ? [keysFrom(ayu), keysFrom(tari)] : [];
+  const file = { name: "note.txt", type: "text/plain", bytes: new TextEncoder().encode("for later") };
+  let item: Item, houseId: string, extra: SealRecipient[], oldStamp: string;
+  // the same paper locked again for `readers`, signed by Ayu (what the Change Readers page sends, minus the stamp)
+  const relock = async (readers: ReturnType<typeof keysFrom>[]) => {
+    const next = await lockItem({ keys: a!, houseId, title: item.title, file, cards: readers.map(signCard), extra, rest: REST, id: item.id });
+    return { envelope: next.envelope, signature: next.signature, readers: next.readers };
+  };
+
+  // T-12.1 Ayu puts in a paper for Ayu only, then adds Tari: Tari opens it, signature proven, stamp matches, same bytes
+  it("adds a reader, who then opens it", async () => {
+    houseId = (await houseIdOf(a!.address))!;
+    extra = await recoveryOf(a!.address);
+    item = await lockItem({ keys: a!, houseId, title: "Change Me", file, cards: [signCard(a!)], extra, rest: REST });
+    madeItems.push(item.id);
+    expect((await putIn(a!.address, item)).status).toBe(200);
+    expect((await rowOf(item.id)).changed_at).toBeNull();
+
+    const body = await relock([a!, t!]);
+    oldStamp = await stamp(a!, await itemText(houseId, item.id, item.title, body.envelope), REST);
+    const res = await change(a!.address, item.id, { ...body, stamp: oldStamp });
+    expect(res.status, JSON.stringify(await res.clone().json())).toBe(200);
+
+    const row = await (await getItem(t!.address, item.id)).json();
+    expect(row).toMatchObject({ reader: true, readerCount: 2, changed_at: expect.any(String), readerNames: ["Ayu", "Tari"], recoveryReader: extra.length > 0 });
+    const opened = await openItem(t!, { ...row, houseId }, REST);
+    expect(opened.proven).toBe(true);
+    expect(opened.paper).toEqual(file);
+    expect(opened.stamp).toEqual({ hash: oldStamp, at: expect.any(Date) });
+    const stored = await rowOf(item.id);
+    expect(stored.readers).toEqual([a!.address, t!.address]);
+    expect(stored.size).toBe(envelopeFromText(body.envelope).length);
+  }, 120_000);
+
+  // T-12.2 Ayu removes Tari again: Tari gets reader false and no locked copy
+  it("removes a reader, who then gets no copy", async () => {
+    expect((await change(a!.address, item.id, await relock([a!]))).status).toBe(200);
+    const row = await (await getItem(t!.address, item.id)).json();
+    expect(row).toMatchObject({ reader: false, readerCount: 1 });
+    expect(row.envelope).toBeUndefined();
+    expect((await rowOf(item.id)).stamp).toBeNull(); // the old stamp proved the old copy, so it goes
+  }, 60_000);
+
+  // T-12.3 every refusal leaves the row exactly as it was
+  it("refuses each bad change and keeps the old copy", async () => {
+    const before = await rowOf(item.id);
+    const good = await relock([a!, t!]);
+    const stranger = keysFrom(makeWords()).address;
+    const forTari = await lockItem({ keys: a!, houseId, title: item.title, file, cards: [signCard(t!)], extra, rest: REST, id: item.id });
+    const twice = await lockItem({ keys: a!, houseId, title: item.title, file, cards: [signCard(a!), signCard(a!)], extra, rest: REST, id: item.id });
+    const noRecovery = await lockItem({ keys: a!, houseId, title: item.title, file, cards: [signCard(a!), signCard(t!)], rest: REST, id: item.id });
+
+    expect((await change(null, item.id, good)).status).toBe(401);
+    expect((await change(stranger, item.id, good)).status).toBe(403);
+    expect((await change(t!.address, item.id, good)).status).toBe(403); // a reader, not the sender
+    expect((await change(a!.address, randomUUID(), good)).status).toBe(404);
+    const bad = [
+      { ...good, title: "New Title" },
+      { ...good, readers: [a!.address, stranger] },
+      { envelope: forTari.envelope, signature: forTari.signature, readers: forTari.readers }, // me missing
+      { envelope: twice.envelope, signature: twice.signature, readers: twice.readers },
+      ...(extra.length ? [{ envelope: noRecovery.envelope, signature: noRecovery.signature, readers: noRecovery.readers }] : []),
+      { ...good, signature: before.signature }, // signed over the old copy
+      { ...good, stamp: oldStamp }, // a stamp of another version
+    ];
+    for (const body of bad) {
+      const res = await change(a!.address, item.id, body);
+      expect(res.status, JSON.stringify(await res.json())).toBe(400);
+    }
+    expect(await rowOf(item.id)).toEqual(before);
+  }, 120_000);
 });

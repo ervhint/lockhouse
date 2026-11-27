@@ -4,9 +4,10 @@ import { envelopeFromText, envelopeToText, open, seal, toHex, type RecipientCard
 import { signMessage, type MessageSignature } from "@qorechain/qoresign";
 import { verifyMessageWithChain } from "@qorechain/qoresign/network";
 import type { keysFrom } from "./keys";
-import { checkCard } from "./padlock";
+import { checkCard, reason } from "./padlock";
+import { checkRecovery, type Recovery } from "./recovery";
 import { CHAIN_ID, ITEM_PURPOSE } from "./settings";
-import { checkStamp } from "./stamp";
+import { checkStamp, stamp } from "./stamp";
 
 type Keys = ReturnType<typeof keysFrom>;
 export type Paper = { name: string; type: string; bytes: Uint8Array };
@@ -60,10 +61,9 @@ export const pictureUrl = (p: Paper) => new Promise<string>((ok, no) => {
 });
 
 /** Check each reader's card on chain, then seal one hybrid envelope with the item id as AAD (AC-5.1, INV-4).
- *  `extra`: readers with no card, already checked (the house's recovery key, U10). */
-export async function lockCopy(paper: Paper, cards: RecipientCard[], rest: string, extra: SealRecipient[] = []) {
+ *  `extra`: readers with no card, already checked (the house's recovery key, U10). `id`: keep a paper's id (Change Readers, U12). */
+export async function lockCopy(paper: Paper, cards: RecipientCard[], rest: string, extra: SealRecipient[] = [], id: string = crypto.randomUUID()) {
   const recipients = [...await Promise.all(cards.map((c) => checkCard(c, rest))), ...extra];
-  const id = crypto.randomUUID();
   const envelope = envelopeToText(seal({ chainId: CHAIN_ID, purpose: ITEM_PURPOSE, recipients, plaintext: pack(paper), aad: enc.encode(id) }));
   return { id, envelope, readers: cards.map((c) => c.address) };
 }
@@ -86,7 +86,37 @@ export async function openItem(keys: { seal: SealKeyPair }, it: { id: string; ho
 }
 
 /** Lock and sign in one go (what the tests use; the Put In screen shows each step). */
-export async function lockItem(a: { keys: Keys; houseId: string; title: string; file: Paper; cards: RecipientCard[]; extra?: SealRecipient[]; rest: string }): Promise<Item> {
-  const copy = await lockCopy(a.file, a.cards, a.rest, a.extra);
+export async function lockItem(a: { keys: Keys; houseId: string; title: string; file: Paper; cards: RecipientCard[]; extra?: SealRecipient[]; rest: string; id?: string }): Promise<Item> {
+  const copy = await lockCopy(a.file, a.cards, a.rest, a.extra, a.id);
   return { ...copy, title: a.title, signature: await signItem(a.keys, a.houseId, copy.id, a.title, copy.envelope) };
+}
+
+/** Put In and Change Readers (S-07, S-13): check the house's recovery key and each reader's card on chain, lock on this
+ *  device, sign, then stamp on QoreChain. `onStep` shows each next step as it starts. Nothing is sent to our server here;
+ *  if a step fails it throws an Error that says, in plain words, why nothing was saved (AC-5.1, AC-11.2, AC-12.4). */
+export async function lockSignStamp(a: { keys: Keys; house: { id: string; members: { address: string }[]; recovery: Recovery | null }; title: string; paper: Paper;
+  cards: RecipientCard[]; rest: string; id?: string; onStep: (s: "signing" | "stamping") => Promise<unknown> | void }): Promise<Item> {
+  let extra: SealRecipient[];
+  try { // the house's recovery key, if any, is one more reader; a member must have signed it (U10)
+    extra = a.house.recovery ? [await checkRecovery(a.house.recovery, a.house.id, a.house.members.map((m) => m.address), a.rest)] : [];
+  } catch {
+    throw new Error("The house's recovery key didn't check out on QoreChain, so nothing was locked or sent. Try again in a moment.");
+  }
+  let item: Item;
+  try {
+    performance.mark("lock-start");
+    const copy = await lockCopy(a.paper, a.cards, a.rest, extra, a.id);
+    console.info(`Locked for ${a.cards.length} readers in ${Math.round(performance.measure("lock", "lock-start").duration)} ms (card checks included)`);
+    await a.onStep("signing");
+    item = { ...copy, title: a.title, signature: await signItem(a.keys, a.house.id, copy.id, a.title, copy.envelope) };
+  } catch {
+    throw new Error("A reader's signed card didn't check out on QoreChain, so nothing was locked or sent. Try again; if it keeps failing, ask them to sign in again to renew their card.");
+  }
+  await a.onStep("stamping");
+  try { // the stamp goes on chain before saving: if it fails, nothing is saved (AC-11.2, D-17)
+    item.stamp = await stamp(a.keys, await itemText(a.house.id, item.id, item.title, item.envelope), a.rest);
+  } catch (e) {
+    throw new Error(`Couldn't stamp it on QoreChain, so nothing was saved. ${reason(e, "the stamp")}`);
+  }
+  return item;
 }

@@ -2,24 +2,20 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { KeyRound } from "lucide-react";
 import type { RecipientCard } from "@qorechain/qoreseal";
 import Input from "@/components/Input";
 import Checkbox from "@/components/Checkbox";
 import Button from "@/components/Button";
-import Badge from "@/components/Badge";
-import AddressChip from "@/components/AddressChip";
+import LockSteps, { BUSY, type Step } from "@/components/LockSteps";
 import Panel from "@/components/Panel";
+import ReaderPicker from "@/components/ReaderPicker";
 import Skeleton from "@/components/Skeleton";
 import Toast from "@/components/Toast";
 import { keysFrom, loadKeys } from "@/lib/keys";
-import { NOTE, fileProblem, itemText, lockCopy, signItem, titleProblem, type Item } from "@/lib/items";
-import { reason } from "@/lib/padlock";
-import { checkRecovery, type Recovery } from "@/lib/recovery";
-import { stamp } from "@/lib/stamp";
+import { NOTE, fileProblem, lockSignStamp, titleProblem, type Item } from "@/lib/items";
+import type { Recovery } from "@/lib/recovery";
 
 type House = { id: string; members: { name: string; address: string; card: RecipientCard }[]; recovery: Recovery | null };
-type Step = "ready" | "locking" | "signing" | "stamping" | "saving";
 const SAVE_FAILED = "Could not save. Nothing was sent. Try again.";
 const nextFrame = () => new Promise((ok) => requestAnimationFrame(() => setTimeout(ok)));
 
@@ -83,36 +79,18 @@ export default function PutInForm() {
     setStep("locking");
     await nextFrame();
     let item: Item;
-    const rest = `${location.origin}/api/chain`;
-    let extra;
-    try { // the house's recovery key, if any, is one more reader; a member must have signed it (U10)
-      extra = house!.recovery ? [await checkRecovery(house!.recovery, house!.id, house!.members.map((m) => m.address), rest)] : [];
-    } catch {
-      setStep("ready");
-      return setErrors({ lock: "The house's recovery key didn't check out on QoreChain, so nothing was locked or sent. Try again in a moment." });
-    }
     try {
       const paper = kind === "file" ? { name: file!.name, type: file!.type || "application/octet-stream", bytes: new Uint8Array(await file!.arrayBuffer()) }
         : { ...NOTE, bytes: new TextEncoder().encode(note) };
-      performance.mark("lock-start");
-      const copy = await lockCopy(paper, readers.map((m) => m.card), rest, extra);
-      console.info(`Locked for ${readers.length} readers in ${Math.round(performance.measure("lock", "lock-start").duration)} ms (card checks included)`);
-      setLocked(readers.length);
-      setStep("signing");
-      await nextFrame(); // "Locked on This Device" is on screen before anything is sent
-      item = { ...copy, title: title.trim(), signature: await signItem(keys!, house!.id, copy.id, title.trim(), copy.envelope) };
-    } catch {
-      setStep("ready");
-      setLocked(0);
-      return setErrors({ lock: "A reader's signed card didn't check out on QoreChain, so nothing was locked or sent. Try again; if it keeps failing, ask them to sign in again to renew their card." });
-    }
-    setStep("stamping");
-    try { // the stamp goes on chain before saving: if it fails, nothing is saved (AC-11.2, D-17)
-      item.stamp = await stamp(keys!, await itemText(house!.id, item.id, item.title, item.envelope), rest);
+      item = await lockSignStamp({ keys: keys!, house: house!, title: title.trim(), paper, cards: readers.map((m) => m.card), rest: `${location.origin}/api/chain`,
+        onStep: async (s) => {
+          setStep(s);
+          if (s === "signing") { setLocked(readers.length); await nextFrame(); } // "Locked on This Device" is on screen before anything is sent
+        } });
     } catch (e) {
       setStep("ready");
       setLocked(0);
-      return setErrors({ lock: `Couldn't stamp it on QoreChain, so nothing was saved. ${reason(e, "the stamp")}` });
+      return setErrors({ lock: (e as Error).message });
     }
     await send(item);
   }
@@ -154,37 +132,12 @@ export default function PutInForm() {
                 onChange={(e: ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0] ?? null)} />
             : <Input ref={noteField} multiline label="Your Note" placeholder="Write anything you want to keep private" disabled={busy} error={errors.note}
                 value={note} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNote(e.target.value)} />}
-          <fieldset className="flex flex-col gap-2" disabled={busy}>
-            <legend className="mb-1 text-sm font-medium">Who Can Open It</legend>
-            {house.members.map((m) => {
-              const mine = m.address === keys.address;
-              return (
-                <Checkbox key={m.address} checked={mine || picked.includes(m.address)} disabled={mine}
-                  onChange={(e) => setPicked((p) => e.target.checked ? [...p, m.address] : p.filter((a) => a !== m.address))}>
-                  <span className="font-medium sm:min-w-20">{m.name}{mine && <span className="font-normal text-muted"> (You)</span>}</span>
-                  <AddressChip address={m.address} />                </Checkbox>
-              );
-            })}
-          </fieldset>
-          {/* Not a person, so not in the list: the recovery key opens every paper (U10). The maker's name shows so a stranger stands out. */}
-          {house.recovery && (
-            <p className="-mt-3 flex items-start gap-2 text-sm text-muted">
-              <KeyRound className="mt-0.5 size-4 shrink-0" aria-hidden />
-              The house&apos;s recovery key (made by {house.members.find((m) => m.address === house.recovery!.by)?.name}) can open it too.
-            </p>
-          )}
+          <ReaderPicker members={house.members} me={keys.address} picked={picked} onPick={setPicked} recovery={house.recovery} disabled={busy} />
           <div className="flex flex-col gap-3">
-          {/* Always in the page (never display:none), so screen readers announce each step. */}
-          <div role="status" className="flex flex-wrap gap-2">
-            {step === "locking" && <Badge tone="wait">Locking on This Device…</Badge>}
-            {locked > 0 && <Badge tone="ok">Locked on This Device · ML-KEM-1024 + X25519 · {locked} {locked === 1 ? "Reader" : "Readers"}{house.recovery && " + Recovery Key"}</Badge>}
-            {step === "signing" && <Badge tone="wait">Signing With Your Key…</Badge>}
-            {step === "stamping" && <Badge tone="wait">Stamping on QoreChain…</Badge>}
-            {step === "saving" && <Badge tone="wait">Saving the Locked Copy…</Badge>}
-          </div>
+          <LockSteps step={step} locked={locked} recovery={!!house.recovery} />
           {errors.lock && <p role="alert" className="text-sm text-danger">{errors.lock}</p>}
           <Button type="submit" full loading={busy}>
-            {step === "locking" ? "Locking" : step === "signing" ? "Signing" : step === "stamping" ? "Stamping" : step === "saving" ? "Saving" : `Lock and Put In for ${count} ${count === 1 ? "Reader" : "Readers"}`}
+            {step === "ready" ? `Lock and Put In for ${count} ${count === 1 ? "Reader" : "Readers"}` : BUSY[step]}
           </Button>
           </div>
         </form>

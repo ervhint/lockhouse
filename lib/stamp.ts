@@ -24,9 +24,15 @@ export async function stamp(keys: Keys, text: string, rest: string) {
 /** When the paper was stamped, or null if this stamp doesn't prove it (INV-6): committed, signed by the sender with an
  *  ML-DSA-87 layer that checks out against their key in the phone book, and this paper's memo. Throws if QoreChain isn't reached. */
 export async function checkStamp(txhash: string, sender: string, text: string, rest: string) {
-  const tx = await inspectTransaction({ rest, txhash, chainId: CHAIN_ID }); // the kit's own check, as the explorer does it
+  // The block time: inspectTransaction reads the transaction but doesn't give its time, so keep it from that same answer.
+  let at: string | undefined;
+  const keepTime = async (url: string, init?: RequestInit) => {
+    const res = await fetch(url, init);
+    if (res.ok && url.endsWith(`/cosmos/tx/v1beta1/txs/${txhash}`)) at = (await res.clone().json()).tx_response?.timestamp;
+    return res;
+  };
+  const tx = await inspectTransaction({ rest, txhash, chainId: CHAIN_ID, fetch: keepTime }); // the kit's own check, as the explorer does it
   if (!tx || tx.code !== 0 || tx.signer?.address !== sender || !tx.pqLayer.verified || tx.memo !== await stampMemo(text)) return null;
-  const res = await fetch(`${rest}/cosmos/tx/v1beta1/txs/${txhash}`); // the block time: inspectTransaction doesn't give it
-  if (!res.ok) throw Object.assign(new Error("Can't read when it was stamped."), { code: "NETWORK_UNAVAILABLE" });
-  return new Date((await res.json()).tx_response.timestamp);
+  if (!at) throw Object.assign(new Error("Can't read when it was stamped."), { code: "NETWORK_UNAVAILABLE" });
+  return new Date(at);
 }

@@ -71,16 +71,18 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 - TxPill · `components/TxPill.tsx` · transaction status (waiting/pending/confirmed/failed), built on Badge
 - AddressChip · `components/AddressChip.tsx` · short qor1 address or tx hash (long values cut to start…end), optional explorer link (`href`) or copy button (`copy`)
 - Sheet · `components/Sheet.tsx` · the one modal (closes by link or Esc; focus moves in and Tab stays inside)
-- Toast · `components/Toast.tsx` · the one toast (× closes it)
+- Toast · `components/Toast.tsx` · the one toast (× closes it); part of the page, not floating: placed under the form that caused it (`mt-6`) or at the top for messages after a page load (`className="mb-6"`)
 - EmptyState · `components/EmptyState.tsx` · icon, title, text, action; `page` (it is the whole page) puts it on the Panel card with an h1 title, `warn` a red icon
 - Skeleton · `components/Skeleton.tsx` · loading placeholder
 - Heading · `components/Heading.tsx` · page title + one sentence; the h1 takes focus from script (`tabIndex=-1`) for views that change in place
-- PaperView · `components/PaperView.tsx` · an opened paper: signature badge, preview (blurred when not proven), Download, a back action (Item page and Open With Recovery Words)
-- Words · `components/Words.tsx` · 24 secret words in a numbered grid (S-03 backup, recovery key); `copy` adds Copy All Words (S-03 only)
-- AppShell · `components/AppShell.tsx` · header, night background; `signedIn` shows the nav (House · Members · Papers) + UserMenu; the Drill passes `signedIn={false}` so it always shows the stranger's header
+- PaperView · `components/PaperView.tsx` · an opened paper: signature badge, who can open it, preview (left 3/5 on wide screens) (blurred when not proven), Download, a back action (Item page and Open With Recovery Words)
+- Words · `components/Words.tsx` · 24 secret words in a numbered grid (S-03 backup, recovery key); `copy` adds Copy All Words (S-03 backup and S-11 recovery key)
+- AppShell · `components/AppShell.tsx` · header, night background; the current page is lit in the menu (a paper and Put In count as Papers); every page the same width (max-w-3xl); `signedIn` shows the nav (House · Members · Papers) + UserMenu; the Drill passes `signedIn={false}` so it always shows the stranger's header
 - UserMenu · `components/UserMenu.tsx` · signed-in menu: name from this browser, Sign Out, Forget Keys; no keys → Welcome (AC-3.7); exports `signOut()`
 - Logo · `components/Logo.tsx` · the sun-ray mark
 - Hero · `components/Hero.tsx` (+ `hero.css`) · Welcome screen from sample 02 (fog, Today / After Q-Day switch); the only link to the Drill (Play the Thief, `.cta.alt` outline button)
+- ReaderPicker · `components/ReaderPicker.tsx` · Who Can Open It: member ticks (me ticked and greyed) + the recovery-key line (Put In, Change Readers)
+- LockSteps · `components/LockSteps.tsx` · the lock → sign → stamp → save step badges, and `BUSY` (the submit button's words per step) (Put In, Change Readers)
 - PaperList, NoPapers, PutInButton · `app/house/HouseView.tsx` · the one paper row (title · sender + date · readers · Stamped badge), used by House and Papers; the member row is in the same file (House and Members)
 
 ## Agent skills

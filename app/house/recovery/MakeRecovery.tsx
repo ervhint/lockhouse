@@ -68,9 +68,9 @@ export default function MakeRecovery() {
   return (
     <Panel className="flex flex-col gap-5">
       <Badge tone="warn">Shown Once</Badge>
-      <Words words={words!.split(" ")} />
-      <p className="text-muted">Write these words on paper. Keep the paper where your family can find it. Don&apos;t save the words on your phone or computer.</p>
-      <Checkbox checked={ok} onChange={(e) => setOk(e.target.checked)} disabled={busy}>I wrote the recovery words on paper</Checkbox>
+      <Words words={words!.split(" ")} copy />
+      <p className="text-muted">Write these words on paper, or copy them somewhere safe. Keep them where your family can find them.</p>
+      <Checkbox checked={ok} onChange={(e) => setOk(e.target.checked)} disabled={busy}>I saved the recovery words in a safe place</Checkbox>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <Button ref={save} full disabled={!ok} loading={busy} onClick={send}>{busy ? "Saving the Recovery Key" : "Save the Recovery Key"}</Button>
       <Button variant="ghost" href="/house">Not Now</Button>

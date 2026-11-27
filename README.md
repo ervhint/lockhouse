@@ -27,7 +27,7 @@ The rule: **this is a house, not everyone can enter.**
 6. **Open it.** A reader's browser checks the sender's signature and the paper's stamp on chain, then opens the copy. A paper with a signature that doesn't check out is shown blurred, with "Signature Not Proven". The stamp shows when the paper was put in ("Stamped on QoreChain · {date}"), or "Not Stamped", or "Stamp Doesn't Match".
 7. **The Q-Day Drill (Simulation).** Anyone can play the thief, no account needed: **Play the Thief** on the Welcome page. Break in and steal every stored copy, try to open them (QoreSeal really refuses each one), then wait for Q-Day: the old lock (X25519) breaks, and still nothing opens, because every copy also carries ML-KEM-1024. It ends "You stole {n} papers. You opened 0."
 
-Also built: remove someone from the house, a Papers page with search (title words and sender), a fake drop-in (a pretend hacked server slips in a paper it can't sign; no button in the app, used for the video and the tests), and a **recovery key** for the house (a second set of 24 words, kept on paper, that is one more reader of every paper put in after it was made).
+Also built: **change readers** (the person who put a paper in can add or remove who can open it: their browser locks the same paper again for the new list, signs it and stamps it again), remove someone from the house, a Papers page with search (title words and sender), a fake drop-in (a pretend hacked server slips in a paper it can't sign; no button in the app, used for the video and the tests), and a **recovery key** for the house (a second set of 24 words, kept on paper, that is one more reader of every paper put in after it was made).
 
 ## How it works
 
@@ -83,8 +83,11 @@ What Lockhouse does not do, in plain words:
 - **Once someone opens a paper, it's on their device.** That's why the house is only for people you trust.
 - **Removing someone doesn't take back what they already opened.** It only stops them opening the house from now on.
 - **Lost secret words lose what was locked for them,** unless the house made a recovery key before that paper was put in.
-- **The recovery key only opens papers put in after it was made.** Papers put in before it can't be opened with its words.
+- **The recovery key only opens papers put in after it was made,** or whose readers were changed after it was made. Other papers can't be opened with its words.
 - **If the person who made the recovery key is removed, the key is dropped** (they saw its words). The house can make a new one. Papers already locked to the old key still open with the old words.
+- **Removing a reader doesn't take back a copy they already opened.** It only stops them opening it here from now on.
+- **Changing readers is trust in the person who put the paper in.** The server can't see inside the new copy, so they could also swap what is inside. It is signed and stamped again by them, and only they can change it.
+- **If the person who put a paper in has left the house, no one can change its readers.**
 - **It protects things from now on.** Papers that already leaked stay leaked.
 - **A stamp is public.** Anyone can see on the testnet that an address stamped something, and when. The memo is a fingerprint of the signed text (house, paper, title, locked copy), so it doesn't say what the paper is or who can open it, and it can't be matched to a copy in the public store. Each paper costs its sender a small test-QOR fee.
 - **A stamp proves when, not what.** It shows the paper existed in this form at that time. A hacked server could still strip a stamp from its copy; readers then see "Not Stamped". Papers put in before stamps existed show "Not Stamped" too.

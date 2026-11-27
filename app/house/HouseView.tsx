@@ -7,6 +7,7 @@ import { fetchKemKey } from "@qorechain/qoreseal/network";
 import Panel from "@/components/Panel";
 import Button from "@/components/Button";
 import Badge from "@/components/Badge";
+import { shortName } from "@/components/UserMenu";
 import AddressChip from "@/components/AddressChip";
 import EmptyState from "@/components/EmptyState";
 import Skeleton from "@/components/Skeleton";
@@ -64,8 +65,8 @@ function RemoveSheet({ member, onRemoved }: { member: Member; onRemoved: (name: 
 const ROW = "flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white/6 px-4 py-3"; // a member or a paper
 
 const MemberName = ({ m, me }: { m: Member; me: string }) =>
-  // wide screens: a fixed column, so every row's address lines up; a long name wraps inside it (never cut), "(You)" always shows
-  <span className="min-w-0 font-medium [overflow-wrap:anywhere] sm:w-44 sm:shrink-0">{m.name}{m.address === me && <span className="whitespace-nowrap font-normal text-muted"> (You)</span>}</span>;
+  // wide screens: a fixed column, so every row's address lines up. At most 10 characters, then "…"; the whole name on hover.
+  <span className="whitespace-nowrap font-medium sm:w-36 sm:shrink-0" title={m.name}>{shortName(m.name)}{m.address === me && <span className="font-normal text-muted"> (You)</span>}</span>;
 
 /** One row per paper: its title, who put it in, when, how many can open it, and whether it is stamped (U11; the paper's page checks the stamp).
  *  The House and the Papers page share it. */
@@ -75,9 +76,9 @@ export const PaperList = ({ items }: { items: Paper[] }) => (
       <li key={it.id}>
         <Link href={`/item/${it.id}`} className={`${ROW} hover:bg-white/12`}>
           <FileText className="size-5 shrink-0 text-muted" aria-hidden />
-          <span className="w-[calc(100%-2rem)] truncate font-medium sm:w-48">{it.title}</span>{/* phones: the line beside the icon */}
-          <span className="text-sm text-muted sm:w-40">{it.sender} · {new Date(it.date).toLocaleDateString(undefined, { dateStyle: "medium" })}</span>
-          <span className="text-sm text-muted sm:w-20">{it.readers} {it.readers === 1 ? "Reader" : "Readers"}</span>
+          <span className="w-[calc(100%-2rem)] truncate font-medium sm:w-48" title={it.title}>{it.title}</span>{/* phones: the line beside the icon */}
+          <span className="whitespace-nowrap text-sm text-muted sm:w-44" title={it.sender}>{shortName(it.sender)} · {new Date(it.date).toLocaleDateString(undefined, { dateStyle: "medium" })}</span>
+          <span className="whitespace-nowrap text-sm text-muted sm:w-20">{it.readers} {it.readers === 1 ? "Reader" : "Readers"}</span>
           <span className="sm:ml-auto">{it.stamped ? <Badge tone="ok">Stamped</Badge> : <Badge tone="warn">Not Stamped</Badge>}</span>
         </Link>
       </li>
@@ -136,6 +137,8 @@ export default function HouseView({ view, remove, recoverySaved }: { view: "home
   const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
   return (
     <>
+      {removed && <Toast key={removed.round} className="mb-6">{removed.name} is out of the house.</Toast>}
+      {saved && !removed && <Toast className="mb-6">The recovery key is saved. Papers put in from now on can also be opened with its words.</Toast>}
       <p role="status" className="mb-4 flex min-h-6 items-center gap-2 text-muted">
         {busy && house && <><Loader2 className="size-4 animate-spin" aria-hidden />Updating the list…</>}
       </p>
@@ -152,11 +155,11 @@ export default function HouseView({ view, remove, recoverySaved }: { view: "home
                   <UserRound className="size-5 shrink-0 text-muted" aria-hidden />
                   <MemberName m={m} me={house.me} />
                   <AddressChip address={m.address} copy />
-                  <span className="flex flex-wrap items-center gap-2 sm:ml-auto sm:shrink-0">
+                  <span className="flex flex-wrap items-center gap-2 sm:shrink-0">
                     <PadlockBadge address={m.address} round={round} />
                     {m.address !== house.me
-                      ? <Button variant="ghost" href={`/members?remove=${m.address}`} className="min-h-9! px-3!" aria-label={`Remove ${m.name}`}><UserMinus className="size-4" aria-hidden />Remove</Button>
-                      : <span aria-hidden className="invisible max-sm:hidden"><Button variant="ghost" className="min-h-9! px-3!" tabIndex={-1}><UserMinus className="size-4" />Remove</Button></span>}{/* keeps the badges in one column on wide screens */}
+                      ? <Button variant="ghost" href={`/members?remove=${m.address}`} className="min-h-9! px-3!" aria-label={`Remove ${m.name}`} title={`Remove ${m.name}`}><UserMinus className="size-4" aria-hidden /></Button>
+                      : !alone && <span aria-hidden className="invisible max-sm:hidden"><Button variant="ghost" className="min-h-9! px-3!" tabIndex={-1}><UserMinus className="size-4" /></Button></span>}{/* keeps the badges in one column with the others' Remove; alone, nothing to line up with */}
                   </span>
                 </li>
               ))}
@@ -195,8 +198,6 @@ export default function HouseView({ view, remove, recoverySaved }: { view: "home
           </Panel>
         )}      </div>
       {leaving && <RemoveSheet member={leaving} onRemoved={(name) => { setRemoved({ name, round: Date.now() }); router.replace("/members"); load(); }} />}
-      {removed && <Toast key={removed.round}>{removed.name} is out of the house.</Toast>}
-      {saved && !removed && <Toast>The recovery key is saved. Papers put in from now on can also be opened with its words.</Toast>}
     </>
   );
 }

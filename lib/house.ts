@@ -1,9 +1,13 @@
-// The house: who is in it, and adding someone (U4). Server only (uses the service role key).
-import type { RecipientCard } from "@qorechain/qoreseal";
+// The house: who is in it, adding someone (U4), and the checks on a paper before it is stored (U5, U12). Server only (uses the service role key).
+import { envelopeFromText, parseEnvelope, type RecipientCard } from "@qorechain/qoreseal";
+import type { MessageSignature } from "@qorechain/qoresign";
+import { verifyMessageWithChain } from "@qorechain/qoresign/network";
 import { db } from "./db";
+import { MAX_FILE, itemText } from "./items";
 import { checkCard } from "./padlock";
 import type { Recovery } from "./recovery";
-import { REST } from "./settings";
+import { CHAIN_ID, REST } from "./settings";
+import { checkStamp } from "./stamp";
 
 export const NO_PADLOCK = "This address has no padlock in the Phone Book yet. Ask them to register their padlock and sign in once, then try again.";
 export const BAD_CARD = "Their signed card does not match this address. Nothing was added. Ask them to sign in to Lockhouse again to renew their card, then try again.";
@@ -60,4 +64,58 @@ export async function houseOf(address: string) {
     .map((r) => ({ name: r.people.name, address: r.address, card: r.people.card }))
     .sort((a, b) => Number(b.address === address) - Number(a.address === address) || a.name.localeCompare(b.name)); // me first, then A–Z
   return { id, members, items: papers.items, paperCount: papers.total, recovery: h.data.recovery as Recovery | null };
+}
+
+const offline = (e: unknown) => (e as { code?: string }).code === "NETWORK_UNAVAILABLE";
+const NAME_ROOM = 1024; // the name and type line inside the envelope, on top of the file
+
+/** The checks Put In and Change Readers share (AC-5.3, AC-11.3, AC-12.5): every reader a member, me one of them, none
+ *  twice; one hybrid entry per reader (+1 for the house's recovery key); within the size limit; my signature over this
+ *  house, id, title and copy; a stamp, if sent, proves that text from me (INV-6). What to store, or why not (status 400 or 503). */
+export async function checkPaper(me: string, house: string, p: { id: string; title: string; envelope: unknown; signature: unknown; readers: unknown; stamp: unknown }):
+  Promise<{ error: string; status?: number } | { size: number; recovery: string | null }> {
+  const { readers, envelope, stamp } = p;
+  if (stamp !== null && (typeof stamp !== "string" || !/^[0-9A-F]{64}$/.test(stamp))) return { error: "The stamp must be a QoreChain transaction hash." };
+  if (!Array.isArray(readers) || !readers.includes(me) || new Set(readers).size !== readers.length || readers.some((r) => typeof r !== "string"))
+    return { error: "Pick each reader once, and keep yourself as a reader." };
+
+  const [{ data: members, error }, h] = await Promise.all([
+    db().from("house_members").select("address").eq("house_id", house),
+    db().from("houses").select("recovery_lookup").eq("id", house).single(),
+  ]);
+  if (error) throw error;
+  if (h.error) throw h.error;
+  const recovery: string | null = h.data.recovery_lookup; // the house's recovery key is one more reader of every paper (U10)
+  const inHouse = new Set(members.map((m) => m.address));
+  if (!readers.every((r: string) => inHouse.has(r))) return { error: "Every reader must be in your house." };
+
+  let size: number;
+  try {
+    const env = typeof envelope === "string" ? envelopeFromText(envelope) : null;
+    const parsed = env && parseEnvelope(env);
+    if (!parsed || parsed.mode !== "hybrid") return { error: "The locked copy must be a hybrid lock with one entry per reader." };
+    if (parsed.entries.length !== readers.length + (recovery ? 1 : 0))
+      return { error: recovery ? "This house has a recovery key, so it must be one more reader. Reload the page, then try again."
+        : parsed.entries.length === readers.length + 1 ? "This house's recovery key changed. Reload the page, then try again."
+        : "The locked copy must be a hybrid lock with one entry per reader." };
+    if (parsed.ciphertext.length - 16 > MAX_FILE + NAME_ROOM) return { error: `The file is over the ${MAX_FILE / 1024 / 1024} MB limit.` };
+    size = env.length;
+  } catch {
+    return { error: "The locked copy can't be read." };
+  }
+
+  const text = await itemText(house, p.id, p.title, envelope as string);
+  try {
+    await verifyMessageWithChain({ rest: REST, chainId: CHAIN_ID, signer: me, data: text, signature: p.signature as MessageSignature });
+  } catch (e) {
+    if (offline(e)) return { error: "Can't reach QoreChain to check your signature. Nothing was saved. Try again.", status: 503 };
+    return { error: "Your signature doesn't match this paper. Nothing was saved." };
+  }
+  try {
+    if (stamp && !await checkStamp(stamp as string, me, text, REST)) return { error: "This stamp on QoreChain is not for this paper. Nothing was saved. Try again." };
+  } catch (e) {
+    if (offline(e)) return { error: "Can't reach QoreChain to check the stamp. Nothing was saved. Try again.", status: 503 };
+    throw e;
+  }
+  return { size, recovery };
 }

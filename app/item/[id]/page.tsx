@@ -6,5 +6,5 @@ import ItemView from "./ItemView";
 export default async function Item(props: PageProps<"/item/[id]">) {
   await signedIn(); // no session: off to Sign In (AC-3.5)
   const { id } = await props.params;
-  return <AppShell><ItemView id={id} /></AppShell>;
+  return <AppShell><ItemView id={id} changed={(await props.searchParams).changed === "1"} /></AppShell>;
 }

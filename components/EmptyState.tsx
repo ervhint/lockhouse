@@ -10,7 +10,7 @@ export default function EmptyState({ icon: Icon, title, text, action, page, warn
   const inner = <>
     <Icon className={`size-8 ${warn ? "text-danger" : "text-lime"}`} aria-hidden />
     <Title className="text-lg font-medium">{title}</Title>
-    <p className="max-w-sm text-muted">{text}</p>
+    <p className="max-w-xl text-pretty text-muted">{text}</p>
     {action}
   </>;
   return page
