@@ -19,14 +19,18 @@ type View =
   | { at: "failed"; step?: Step; why: string };
 
 const STEPS = {
-  1: { title: "Signature 1 of 2", short: "Puts your signing key in the Phone Book.",
-    ask: "This browser signs one message that puts your ML-DSA-87 signing key in QoreChain's Phone Book, with proof that the key is yours. Your family uses it to check what you sign." },
-  2: { title: "Signature 2 of 2", short: "Puts your padlock in the Phone Book.",
-    ask: "This browser signs one message that puts your ML-KEM-1024 padlock in the Phone Book, so your family can lock papers for you. It is signed with your old key and your new signing key together." },
+  1: { title: "Signature 1 of 2", short: "Puts your signing key in the Phone Book.", name: "Add Your Signing Key",
+    ask: "This puts your signing key in the Phone Book. It proves that what you put in Lockhouse really comes from you." },
+  2: { title: "Signature 2 of 2", short: "Puts your padlock in the Phone Book.", name: "Add Your Padlock",
+    ask: "This puts your padlock in the Phone Book. You sign it twice in one go, with today's key and with your quantum-safe key, so it stays valid after Q-Day." },
 };
+const fee = (both: boolean) => both
+  ? "The fees are a few hundredths of a test QOR each. Nothing is sent until you press Approve Both in This Browser."
+  : "The fee is a few hundredths of a test QOR. Nothing is sent until you press Approve in This Browser.";
 const MIN_UQOR = 1_000_000n; // 1 test QOR covers both fees (about 0.03 each)
 
-// S-04: two real testnet transactions, each waiting for Approve in This Browser (AC-2.1–2.7).
+// S-04: two real testnet transactions. One approval sends both, one after the other: the second is signed with the key the
+// first puts on chain (Laras, 27 Nov; D-21). If only the second is left (a retry), it asks for that one alone (AC-2.1–2.7).
 export default function Register() {
   const router = useRouter();
   const keys = useRef<ReturnType<typeof keysFrom>>(null);
@@ -72,8 +76,8 @@ export default function Register() {
       setHash((x) => ({ ...x, [step]: h }));
       await waitForTx(h, rest.current);
       setDone((d) => ({ ...d, [step]: true }));
-      if (step === 1) setView({ at: "ask", step: 2 });
-      else finish();
+      if (step === 1) return approve(2); // same approval: send the padlock as soon as the signing key is on chain
+      finish();
     } catch (e) {
       setView({ at: "failed", step, why: reason(e) });
     }
@@ -129,9 +133,17 @@ export default function Register() {
 
       {view.at === "ask" && (
         <div className="flex flex-col gap-2 rounded-xl border border-white/20 bg-white/5 p-4">
-          <p className="font-medium">{STEPS[view.step].title}: What You Are Signing</p>
-          <p className="text-pretty">{STEPS[view.step].ask}</p>
-          <p className="text-muted">The fee is a few hundredths of a test QOR. Nothing is sent until you press Approve in This Browser.</p>
+          {view.step === 1
+            ? <>
+                <p className="font-medium">Two Signatures, One Approval</p>
+                {([1, 2] as const).map((s) => <p key={s} className="text-pretty"><b className="font-medium">{STEPS[s].title}: {STEPS[s].name}.</b> {STEPS[s].ask}</p>)}
+                <p className="text-muted">{fee(true)}</p>
+              </>
+            : <>
+                <p className="font-medium">{STEPS[2].title}: {STEPS[2].name}</p>
+                <p className="text-pretty">{STEPS[2].ask}</p>
+                <p className="text-muted">{fee(false)}</p>
+              </>}
         </div>
       )}
       {view.at === "no" && <Badge tone="warn">You said no to signing. Nothing was sent.</Badge>}
@@ -155,7 +167,7 @@ export default function Register() {
       {view.at === "ready" && <Button full onClick={() => setView({ at: "ask", step: done[1] ? 2 : 1 })}>Register My Padlock</Button>}
       {view.at === "ask" && (
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button full autoFocus onClick={() => approve(view.step)}>Approve in This Browser</Button>
+          <Button full autoFocus onClick={() => approve(view.step)}>{view.step === 1 ? "Approve Both in This Browser" : "Approve in This Browser"}</Button>
           <Button full variant="ghost" onClick={() => setView({ at: "no", step: view.step })}>Not Now</Button>
         </div>
       )}

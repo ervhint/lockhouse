@@ -45,7 +45,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
   const [saved, setSaved] = useState<Saved | null>(null);
   useEffect(() => setSaved(loadKeys()), []);
   // The next step for this browser: make keys, open the house, sign in again, or register the padlock.
-  const next = !saved ? { href: "/keys", label: "Make Your Keys" }
+  const next = !saved ? { href: "/start", label: "Get Started" }
     : signedIn ? { href: "/house", label: "Open My House", line: "You are signed in.", link: "Open Your House" }
     : saved.signedInBefore ? { href: "/sign-in", label: "Sign In", line: "Your keys are in this browser.", link: "Next: Sign In" }
     : { href: "/padlock", label: "Continue", line: "Your keys are in this browser.", link: "Next: Register Your Padlock" };
@@ -143,8 +143,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
         <header className="bar">
           <Link className="logo" href="/" aria-label="Lockhouse"><Logo />Lockhouse</Link>
           <div className="side">
-            <Link className="cta alt drill" href="/drill">Play the Thief</Link>
-            {next.href !== "/house" && next.href !== "/sign-in" && <Link href="/sign-in">Sign In</Link>}
+            <Link className="cta alt drill" href="/drill">Play the Thief</Link>{/* then the one next step for this browser; Sign In is that step only when it can work */}
             <Link className="cta" href={next.href}>{next.label}</Link>
           </div>
         </header>
@@ -157,7 +156,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
           <p className="cap">Keep your family&apos;s important papers in one house. Every copy is locked in your own browser <br />with <span className="nw">ML-KEM-1024</span>, so it stays shut even when the old locks break.</p>
           {saved
             ? <p className="cap">Welcome back, {saved.name}. {next.line} <Link href={next.href} style={{ textDecoration: "underline" }}>{next.link}</Link></p>
-            : <p className="cap">Already have secret words? <Link href="/keys?restore" style={{ textDecoration: "underline" }}>Restore Your Keys</Link></p>}
+            : null /* new here: Get Started offers both making and restoring keys */}
           <p className="cap drill-m"><Link className="cta alt" href="/drill">Play the Thief in the Q-Day Drill</Link></p>        </div>
       </div>
     </main>

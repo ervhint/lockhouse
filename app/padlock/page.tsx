@@ -6,7 +6,7 @@ import Register from "./Register";
 export default function Padlock() {
   return (
     <AppShell signedIn={false}>
-      <Heading title="Register Your Padlock">Your padlock lets your family lock papers for you. It goes in QoreChain&apos;s Phone Book so they can find it. A small network fee in test QOR pays for it, like a delivery fee.</Heading>
+      <Heading title="Register Your Padlock">Your padlock keeps the papers in Lockhouse locked, so only the members picked for each paper can open it, even after Q-Day. It is kept in QoreChain&apos;s Phone Book, a public list. Adding it costs a tiny fee in free test QOR.</Heading>
       <Register />
     </AppShell>
   );

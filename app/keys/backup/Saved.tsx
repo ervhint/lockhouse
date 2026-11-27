@@ -16,7 +16,7 @@ export default function Saved() {
   </>;
   return (
     <>
-      <Words words={words} />
+      <Words words={words} copy />
       <Checkbox checked={ok} onChange={(e) => setOk(e.target.checked)}>I saved my secret words in a safe place</Checkbox>
       <Button href="/padlock" full disabled={!ok}>Continue</Button>
     </>

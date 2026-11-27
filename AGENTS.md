@@ -76,7 +76,7 @@ Next.js (App Router) + TypeScript + Tailwind · BFF in Route Handlers / Server A
 - Skeleton · `components/Skeleton.tsx` · loading placeholder
 - Heading · `components/Heading.tsx` · page title + one sentence; the h1 takes focus from script (`tabIndex=-1`) for views that change in place
 - PaperView · `components/PaperView.tsx` · an opened paper: signature badge, preview (blurred when not proven), Download, a back action (Item page and Open With Recovery Words)
-- Words · `components/Words.tsx` · 24 secret words in a numbered grid (S-03 backup, recovery key)
+- Words · `components/Words.tsx` · 24 secret words in a numbered grid (S-03 backup, recovery key); `copy` adds Copy All Words (S-03 only)
 - AppShell · `components/AppShell.tsx` · header, night background; `signedIn` shows the nav (House · Members · Papers) + UserMenu; the Drill passes `signedIn={false}` so it always shows the stranger's header
 - UserMenu · `components/UserMenu.tsx` · signed-in menu: name from this browser, Sign Out, Forget Keys; no keys → Welcome (AC-3.7); exports `signOut()`
 - Logo · `components/Logo.tsx` · the sun-ray mark

@@ -64,7 +64,8 @@ function RemoveSheet({ member, onRemoved }: { member: Member; onRemoved: (name: 
 const ROW = "flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white/6 px-4 py-3"; // a member or a paper
 
 const MemberName = ({ m, me }: { m: Member; me: string }) =>
-  <span className="font-medium sm:min-w-20">{m.name}{m.address === me && <span className="font-normal text-muted"> (You)</span>}</span>;
+  // wide screens: a fixed column, so every row's address lines up; a long name wraps inside it (never cut), "(You)" always shows
+  <span className="min-w-0 font-medium [overflow-wrap:anywhere] sm:w-44 sm:shrink-0">{m.name}{m.address === me && <span className="whitespace-nowrap font-normal text-muted"> (You)</span>}</span>;
 
 /** One row per paper: its title, who put it in, when, how many can open it, and whether it is stamped (U11; the paper's page checks the stamp).
  *  The House and the Papers page share it. */
@@ -147,11 +148,11 @@ export default function HouseView({ view, remove, recoverySaved }: { view: "home
           {!house ? <><Skeleton /><Skeleton /></> : <>
             <ul className="flex flex-col gap-2">
               {members!.map((m) => (
-                <li key={m.address} className={ROW}>
-                  <UserRound className="size-5 text-muted" aria-hidden />
+                <li key={m.address} className={`${ROW} sm:flex-nowrap`}>{/* wide screens: one line, so the badges stay in one column */}
+                  <UserRound className="size-5 shrink-0 text-muted" aria-hidden />
                   <MemberName m={m} me={house.me} />
                   <AddressChip address={m.address} copy />
-                  <span className="flex flex-wrap items-center gap-2 sm:ml-auto">
+                  <span className="flex flex-wrap items-center gap-2 sm:ml-auto sm:shrink-0">
                     <PadlockBadge address={m.address} round={round} />
                     {m.address !== house.me
                       ? <Button variant="ghost" href={`/members?remove=${m.address}`} className="min-h-9! px-3!" aria-label={`Remove ${m.name}`}><UserMinus className="size-4" aria-hidden />Remove</Button>

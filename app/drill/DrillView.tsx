@@ -69,7 +69,7 @@ export default function DrillView() {
         {step < 1
           ? <><p className="text-muted">Lockhouse&apos;s server holds every family&apos;s papers. Get in and take them all.</p>
               <Button onClick={steal} loading={busy} full>{busy ? "Stealing" : "Break In and Steal Everything"}</Button></>
-          : <p>You got in and stole <b className="font-medium">{copies.length} papers</b> ({mb(size)}). Every family&apos;s, not just one.</p>}
+          : <p>You broke into Lockhouse&apos;s server and stole every paper stored there, from every house: <b className="font-medium">{copies.length} papers</b> ({mb(size)}). If your house has papers, yours are in this pile too.</p>}
         {problem && <p role="alert" className="text-danger">{problem}</p>}
       </Panel>
 
@@ -91,7 +91,7 @@ export default function DrillView() {
         <Panel className="flex flex-col gap-4">
           {head(3, "Wait for Q-Day")}
           {step < 3
-            ? <><p className="text-muted">Keep the papers. One day a quantum computer will break today&apos;s locks. Then try again.</p>
+            ? <><p className="text-muted">Keep the papers. One day a quantum computer will break today&apos;s locks. Then try again. Thieves call this &ldquo;harvest now, decrypt later&rdquo;: steal locked papers today, open them after Q-Day.</p>
                 <Button onClick={qday} full>It&apos;s Q-Day: Try Again</Button></>
             : <>
                 <ul className="flex flex-col gap-2">
