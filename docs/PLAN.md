@@ -41,7 +41,7 @@ Steps 2–6 are each about 10–15 seconds. The account setup (making keys, regi
 | | What |
 | --- | --- |
 | **Must** | Sign in with your QoreChain key (Sign In With QoreChain, so only you can add to your house) · add a family member by their qor1 address (their signed card is checked first) · make your keys in the browser from secret words (shown once as the backup) · register the padlock: ML-DSA-87 key with proof of possession, then `MsgRegisterKEMKey`, plus the signed card · the house list (members, their badges) · the gate: lock in the browser for chosen members, store only the locked copy · the house's item list · open in the browser · a family member's signed drop-in, checked against the chain · the drill (the Thief steals every copy, Q-Day, 0 opened; labelled "Simulation") |
-| **Should** | A photo size limit with a clear message · explorer links on every on-chain step |
+| **Should** | A photo size limit with a clear message · explorer links on every on-chain step · added in P7: stamp every paper on QoreChain (U11) · change who can open a paper, by the person who put it in (U12) |
 | **Could** | Being in several houses (a house picker) · a recovery key · a fake "from Ratna" drop-in being refused on screen · remove a member · group keys that stop a removed member reading new items |
 | **Won't** | Mainnet · an app to install · offline/Bluetooth · messaging · "after I'm gone" · the QoreX wallet as the key holder (it can't give the house its lock keys; see 1.5) |
 
@@ -129,11 +129,12 @@ erDiagram
     int size
     text recovery "U10: the lookup, when the recovery key is a reader"
     text stamp "U11: hash of the stamp transaction on QoreChain; null = not stamped"
+    timestamptz changed_at "U12: when its readers last changed; null = never"
     timestamptz created_at
   }
 ```
 
-One migration file per unit that adds tables (U3: people, houses, house_members · U5: items · U7: drill_keys, dropped again on 27 Nov by `20261127000000_drill_own_keys.sql` (D-19) · U10: recovery columns · U11: items.stamp), applied to **Staging** `egtxrdfhmtdiujdiywkm` only.
+One migration file per unit that adds tables (U3: people, houses, house_members · U5: items · U7: drill_keys, dropped again on 27 Nov by `20261127000000_drill_own_keys.sql` (D-19) · U10: recovery columns · U11: items.stamp · U12: items.changed_at), applied to **Staging** `egtxrdfhmtdiujdiywkm` only.
 
 ### 3.3 Server routes (the BFF)
 
@@ -142,6 +143,7 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 | `GET/POST /api/chain/[...path]` | anyone | Pass-through to the testnet REST, only for the paths the kits use (account info, balances, PQ key, KEM key, simulate, broadcast, tx lookup; U11 adds tx encode, which `inspectTransaction` uses to get a committed transaction's bytes). The kits take a `rest` address, so the browser gives them `/api/chain` (D-03) |
 | `GET /api/auth/nonce` · `POST /api/auth/verify` · `POST /api/auth/sign-out` | anyone | Sign In With QoreChain (U3) |
 | `GET /api/house` · `POST /api/house/members` | house members | House, members, item list; add a member (U4, U5) |
+| `PUT /api/items/[id]` | the paper's sender | Change Readers (U12, D-22): replace the locked copy with one locked for a new reader list, signed and stamped again. Only the person who put the paper in; same checks as Put In; title and id stay |
 | `GET /api/items?from=N&q=&by=` | house members | The Papers page: 10 papers at a time, newest first, with the count; `q` finds words in the title (3 characters or more, any case, matched as text), `by` keeps one sender (D-18) |
 | `POST /api/items` · `GET /api/items/[id]` | house members | Put in; get one item for a reader (U5, U6). U11: a put-in may carry its stamp (a tx hash), stored only if it checks out on chain; readers get it back |
 | `GET /api/drill` | anyone | Every stored copy (`id, envelope, date`), with no title, names or readers: the Thief's loot (U7, D-19). Replaces the planned `/api/copies`. `POST /api/drill` (give my old keys) was removed on 27 Nov |
@@ -162,7 +164,7 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 **Invariants (must always hold):**
 - INV-1: the server never receives secret words, an ML-KEM-1024 secret key, an ML-DSA-87 secret key, an X25519 secret key, a file or a note.
 - INV-2: every stored item's signature checks out against its sender's ML-DSA-87 key on chain, over `lockhouse-item-v1|{houseId}|{itemId}|{title}|{sha256 of the envelope}`.
-- INV-3: every reader of an item was a member of that house, with a card that checked out against the chain, when it was put in. The sender is always a reader.
+- INV-3: every reader of an item was a member of that house, with a card that checked out against the chain, when it was put in or its readers last changed (U12). The sender is always a reader.
 - INV-4: an envelope opens only with its own item id as AAD (extra data that is checked but not hidden), so a copy can't be moved to another item.
 - INV-5: everything uses chain id `qorechain-diana`.
 - INV-6 (U11): every stored stamp is a committed transaction signed by the paper's sender, with an ML-DSA-87 layer that checks out against their key in the phone book, whose memo is `lockhouse-stamp-v1|{SHA-256 of the INV-2 text}`.
@@ -180,7 +182,7 @@ One migration file per unit that adds tables (U3: people, houses, house_members 
 
 ## 4. Build phases and units
 
-**Order (rule: setup → shared functions → demo Musts in golden-path order):** U0 → U1 → U2 → U3 → U4 → U5 → U6 → U7. Coulds U8–U10 only if time allows. U11 was added in P7 by Laras (26 Nov). Each unit is one chat. Every Must story has a unit (US-02, US-07, US-09 are Shoulds, folded into U1, U2/U4 and U5 because each is a few lines).
+**Order (rule: setup → shared functions → demo Musts in golden-path order):** U0 → U1 → U2 → U3 → U4 → U5 → U6 → U7. Coulds U8–U10 only if time allows. U11 (26 Nov) and U12 (27 Nov) were added in P7 by Laras. Each unit is one chat. Every Must story has a unit (US-02, US-07, US-09 are Shoulds, folded into U1, U2/U4 and U5 because each is a few lines).
 
 Every unit also: replaces that page's mock data and `?state=` jumps with the real flow, uses the shared components (AGENTS.md), and passes `better-interface`. "Est" is a rough guess for one chat.
 
@@ -317,7 +319,7 @@ Covers: US-16      Screens: S-03, S-07      Depends on: U7      Est: 2h
 
 Built 24 Nov (D-16): any member makes it on `/house/recovery` (words made and shown once in the browser; only the public half, a signature and a lookup are sent). Put In checks the member's signature on chain before locking, so a hacked server can't slip in a key of its own; the server refuses a copy without the extra entry. `/recover` (no keys, no sign-in) finds and opens the papers. Removing the member who made it drops the key (they saw the words); papers already locked to it still open with its words.
 
-### Phase G: Added in P7 (Laras, 26 Nov)
+### Phase G: Added in P7 (Laras, 26–27 Nov)
 
 ### U11 — Stamp a paper on QoreChain  (Should · demo)
 Covers: US-20      Screens: S-07, S-08, S-12      Depends on: U6, U10      Est: 3h      Model: Opus 5.5 · max (Laras's choice)
@@ -332,6 +334,29 @@ Acceptance:
 Tests: T-11.1 (integration, testnet: stamp, then check; changed text, another signer and an unknown hash don't match), T-11.2 (integration, testnet + Staging: the route stores a good stamp, refuses another paper's stamp and a malformed one, stores nothing), T-11.3 (integration: an account with no test QOR gets the reason in plain words), T-11.4 (e2e golden: Put In, then the paper shows its stamp and explorer link), T-11.5 (e2e: Not Stamped on an old paper and the fake drop-in; Stamp Doesn't Match after changing a row on Staging; Open With Recovery Words)
 
 Built 26 Nov: `lib/stamp.ts` (`stamp`, `checkStamp`), sent through the padlock's `sendTx` (one transaction recipe, D-04). On testnet a stamp is committed in about 4 s and costs about 0.0174 test QOR in fees plus the 1 uqor. The explorer shows the memo and "Signature security: quantum-safe, verified on-chain, ML-DSA-87". Badge got an `href` option (a link to the explorer), now also used by the House padlock badges.
+
+### U12 — Change who can open a paper  (Should · added 27 Nov)
+Covers: US-21      Screens: S-08 (Change Readers button), S-13 Change Readers (`/item/[id]/readers`)      Depends on: U5, U10, U11      Est: 3–4h      Model: Opus 5.5 · high (Laras picks)
+Families change: someone marries in, someone leaves. Today a paper's readers are fixed when it is put in, so someone added to the house later can't open older papers. U12 lets **the person who put a paper in** (and only them, D-22) change who can open it: add readers, remove readers. Their browser opens the paper, locks it again for the new list, signs it and stamps it again, then the server replaces the old copy. Same item id and title, so links and the list stay the same. Built from Put In's own steps (lock → sign → stamp → save); nothing new on chain.
+
+How to build (keep it small, `ponytail`):
+- `lib/items.ts`: `lockCopy` takes an optional `id`, so a paper keeps its id (the envelope's AAD and the signed text use it, INV-4).
+- One shared reader picker: move Put In's "Who Can Open It" list (members with ticks, you ticked and greyed, the recovery-key line) into `components/ReaderPicker.tsx`; Put In and Change Readers both use it (AGENTS: one shared component per job).
+- `PUT /api/items/[id]`: move Put In's checks (readers, envelope, recovery entry, size, signature, stamp) into one function both routes call; do not copy them.
+- Migration `20261127xxxxxx_u12_changed_at.sql`: `alter table items add column changed_at timestamptz`. Laras runs it in the Staging SQL Editor (the Supabase tool tends to decline); Prod at ship.
+
+Acceptance:
+- AC-12.1 Given I open a paper I put in and its signature checks out, then the paper page shows a Change Readers button. Given anyone else (another reader, or a paper whose signature isn't proven, or Open With Recovery Words), there is no button, and opening `/item/{id}/readers` directly says "Only {senderName} can change who can open this paper." with Back to the Paper.
+- AC-12.2 Given Change Readers, then the page opens the paper on this device first (signature checked, like S-08), then shows the house's members with ticks: the current readers who are still members ticked, me ticked and greyed (I can't remove myself, D-14), and the recovery-key line when the house has one. Save is off until something changed. Its label says the count: "Save for {readerCount} Readers".
+- AC-12.3 Given I untick someone who can open it now, then before saving the page says plainly: "{memberName} may already have this paper on their device. Removing them only stops them opening it here from now on." (the same honest limit as Remove Member).
+- AC-12.4 Given Save, then the browser checks each reader's card on chain, locks the same paper again for the new list (+ the house's recovery key if it has one, even if the paper was put in before the key was made), keeps the item id, signs it (INV-2, same title), stamps it on QoreChain, and only then sends `{ envelope, signature, readers, stamp }`. Each step shows like Put In (Locking on This Device… · Signing With Your Key… · Stamping on QoreChain… · Saving…). A failed card check, recovery check or stamp saves nothing and says why; a failed save offers Try Again with the same locked copy.
+- AC-12.5 Given the server gets a change, then it replaces the copy only if: I'm signed in and in the paper's house (else 401/403, 404 for a paper not in my house); I am the paper's sender (else 403); the body has exactly those fields; every reader is a current member, I am one, none twice; the envelope is hybrid with one entry per reader (+1 when the house has a recovery key) and within the size limit; my signature checks out on chain over the paper's own house, id and title and the new envelope; a stamp, if sent, proves this new text from me (INV-6). Otherwise 400 (503 when QoreChain can't be reached) and the old copy stays exactly as it was. On success it stores the new envelope, signature, readers, size, recovery lookup and stamp, and sets `changed_at`.
+- AC-12.6 Given a change was saved, then I land back on the paper with a toast "Readers changed and stamped on QoreChain. {readerCount} readers can open it now." The paper page and the Papers list show the new reader count; under the title it says "Readers changed {date}". The stamp badge shows the new stamp (it proves this version).
+- AC-12.7 Given someone was added, then they can open the paper (signature checked, stamped). Given someone was removed, then they see "This Paper Is Not for You" and the server sends them no locked copy.
+- AC-12.8 Given readers who have left the house (U9), then they are not in the list and drop out on the next change (INV-3).
+Tests: T-12.1 (integration, testnet + Staging: Ayu puts in a paper for Ayu only, adds Tari through the route; Tari opens it, proven and stamped, same bytes; readers, size and `changed_at` updated), T-12.2 (integration: Ayu removes Tari; Tari gets reader false and no envelope), T-12.3 (integration: refusals, each leaving the row unchanged: signed out 401, not in the house 403, a reader who isn't the sender 403, an extra field such as `title`, a reader outside the house, me missing, a reader twice, a missing recovery entry, a signature over the old envelope, another paper's stamp → 400), T-12.4 (unit: `lockCopy` with an id keeps it, and the copy opens only with that id), T-12.5 (e2e golden-style, Chrome: Ayu adds Ratna to an older paper, Ratna opens it in her profile; Ayu removes her again after the warning, Ratna sees Not for You), T-12.6 (e2e: no button for Tari on Ayu's paper or on the fake drop-in; the direct link says only the sender can), T-12.7 (e2e: a stamp made to fail saves nothing; a failed save's Try Again; 375 and 320 px, no sideways scroll; better-interface)
+
+Honest limits (README, when built): someone removed may still have a copy they opened before; the server can't see inside the new copy, so the person who put a paper in could also swap what is inside when changing readers (it is signed and stamped again by them, and only they can); if the person who put a paper in has left the house, no one can change its readers.
 
 **Won't in this build:** group keys (US-19), a house picker (being in several houses).
 
@@ -360,6 +385,7 @@ Built 26 Nov: `lib/stamp.ts` (`stamp`, `checkStamp`), sent through the padlock's
 | D-19 | 27 Nov | The drill is the Thief's page, the same for everyone and linked only from Welcome: steal every copy, try to open them (real QoreSeal refusals), then Q-Day (pretend) and read that each copy still carries ML-KEM-1024. Members give nothing; `drill_keys`, `POST /api/drill`, our old lock and the sample picture are gone. The family pages have no drill and no Fake Drop-In button. Replaces D-11 | A member giving their old key put the family inside the thief's story, and a page that makes its own sample looked staged. Real members' old keys never leave their devices, so only the break itself can be pretend. The server now holds no secret key at all |
 | D-20 | 27 Nov | Any member can still remove another (U9 unchanged) | Laras kept it when asked on 27 Nov |
 | D-21 | 27 Nov | Registering the padlock takes one approval for both transactions (they still go one after the other, each with its own Pending → Confirmed and explorer link). Changes D-13's "two approvals" | Laras on a fresh walk-through: pressing Approve twice felt like the first one hadn't worked. The keys live in the page, so there is no wallet asking per transaction |
+| D-22 | 27 Nov | U12: only the person who put a paper in can change its readers. Their browser locks the same paper again for the new list (same id and title, + the house's recovery key when there is one), signs and stamps it again; the server replaces the copy after Put In's checks and sets `changed_at`. No history of old versions is kept (their stamps stay on chain) | Laras chose "only who put it in": they sign the new copy, so "Put in by {name}" and its signature stay true, with no "changed by someone else" line and fewer checks. One flow reused from Put In keeps it small |
 
 ## 6. Open questions
 

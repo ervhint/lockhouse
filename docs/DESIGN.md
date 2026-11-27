@@ -28,6 +28,7 @@
 | US-18 | Could | | Remove someone from the house |
 | US-19 | Could | | Group keys, so a removed member can't read new items |
 | US-20 | Should (added in P7, Laras, 26 Nov) | steps 2–3 | Every paper is stamped on QoreChain when it is put in, so anyone in the house can prove when it was put in and that it hasn't changed since |
+| US-21 | Should (added in P7, Laras, 27 Nov) | | The person who put a paper in can change who can open it (add or remove readers), for example when someone joins the family later (U12) |
 
 ## Screen inventory
 
@@ -46,6 +47,7 @@
 | S-10 | Sign In With QoreChain | US-04 | signing; rejected; failed |
 | S-11 | Make a Recovery Key (`/house/recovery`, U10) | US-16 | words shown once; tick "I wrote the recovery words on paper"; saving; failed (words stay on screen); already has one. House gets a Recovery Key panel (none yet / made by {memberName}) and a saved toast; Put In shows a note under Who Can Open It: the house's recovery key (made by {memberName}) can open it too (not a row: it is not a person; Laras, 25 Nov) |
 | S-12 | Open With Recovery Words (`/recover`, U10, no sign-in) | US-16, US-20 | wrong words; no papers for these words; list; opening; the paper (S-08's view, with its stamp); can't reach QoreChain. Linked from Restore Your Keys and the House panel |
+| S-13 | Change Readers (`/item/[id]/readers`, U12) | US-21 | opening the paper first; only the sender ("Only {senderName} can change who can open this paper."); member ticks (current readers ticked, me greyed, recovery-key line); removal warning ("{memberName} may already have this paper on their device…"); Save off until changed, "Save for {readerCount} Readers"; locking; signing; stamping; card / recovery / stamp failed (nothing saved); save failed + Try Again; saved → back to S-08 with toast. S-08 gains the Change Readers button (sender only, signature proven) and "Readers changed {date}" |
 
 **Web3 states covered** (workflow, Web3 track): no wallet connect (keys live in the page, not in QoreX), so "connect" is replaced by make/restore keys and sign-in. Wrong network → the app only talks to `qorechain-diana`. Signature request → S-04 says what each of the two signatures does. Insufficient funds → S-04 faucet branch. Submitted → pending → confirmed / failed with explorer link → S-04. Stale data → S-05 "list updating…".
 
