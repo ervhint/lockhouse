@@ -1,9 +1,9 @@
 # PROGRESS
 Hackathon: QoreChain Build Before Q-Day · Deadline: 2026-12-03 06:59 WIB (Laras's target: build done end of 2026-11-26) · Track: web3 (Diana testnet, no contract)
 Workflow: HACKATHON-WORKFLOW-V16.md (from 2026-11-23, end of lockhouse-03; same phases and gates as V15, plus rule 27: values are {placeholders}, examples never become copy)
-Phase: P7. Laras's review of U11 + the House rework done and pushed (69bffc7, 657f2eb, c64a29a, 27 Nov); U12 Change Readers built and tested 27 Nov (lockhouse-19-U12), not committed yet · Last gate passed: **G5** · Next: Laras approves the U12 commit, then P7b Ship in a new chat (see "Handoff 2026-11-27 (3)" at the bottom) · Waiting for user: yes (commit)
-Golden path: docs/PLAN.md §1.2 · Units: U0 → U1 → U2 → U3 → U4 → U5 → U6 → U7 (Coulds U8–U10 if time)     App: localhost until P7
-Accounts: GitHub https://github.com/ervhint/lockhouse (public, empty, created 2026-11-23) · Supabase org `ervhint` · Staging ref `egtxrdfhmtdiujdiywkm` · Prod ref `htghbmdautdpgzalysko` (untouched until P7) · Vercel team `ervhint`, project `lockhouse-qorechain` (created 2026-11-23, no deploy until P7)
+Phase: P7b Ship. **Live: https://lockhouse-qorechain.vercel.app** (Prod, 28 Nov) · Last gate passed: **G6** (Laras: "let's do it", 27 Nov) · Next: the steps in internal/SUBMISSION-PREP.md · Waiting for user: yes (Laras records the video clips)
+Golden path: docs/PLAN.md §1.2 · Units: U0–U12 all built     App: live on Vercel (Prod); localhost and Preview use Staging
+Accounts: GitHub https://github.com/ervhint/lockhouse (public) · Supabase org `ervhint` · Staging ref `egtxrdfhmtdiujdiywkm` (Singapore) · Prod ref `htghbmdautdpgzalysko` (Tokyo, live since 28 Nov) · Vercel team `ervhint`, project `lockhouse-qorechain` (functions in Tokyo `hnd1`)
 Could, if time allows: recovery key (Laras, 2026-11-23).
 Laras (23 Nov): P2 starts in a new chat, after P1 is clear.
 
@@ -140,3 +140,19 @@ Dev server: runs in a Terminal tab with `npm.cmd run dev` (PowerShell blocks npm
 
 **Next: P7b Ship** in its own chat (Prod migrations, Vercel deploy, video, project page). Deadline Thu 3 Dec 06:59 WIB.
 
+
+## Handoff 2026-11-28 (end of chat lockhouse-20-P7b; next chat picks up the 10 steps)
+
+**Done 28 Nov (P7b):**
+- Vercel: folder linked (`.vercel/`, gitignored). `vercel.json` (Next.js, functions in Tokyo `hnd1`, next to Prod's `ap-northeast-1`) and `.vercelignore` (a copy of `.gitignore`: Vercel doesn't read `.gitignore`), commit 8589809. Env vars: Preview = Staging (copied from `.env.local`), Production = Prod (`SUPABASE_URL` and a new random `SESSION_SECRET` by Claude; `SUPABASE_SERVICE_ROLE_KEY` pasted by Laras). Vercel Authentication protects Previews.
+- Mistake, fixed: the first `vercel deploy` went out as **Production** (a project's first deploy) and uploaded `internal/`, the workflow files and the P3 samples (no `.env.local`). Laras said yes; it was deleted (`vercel remove`). Goes in AI_USAGE.md.
+- Prod migrations: 1–2 by the Supabase tool; it declined 3 (any SQL with "delete"), so Laras ran 3–10 from `internal/prod-migrations-3-to-10.sql` in the Prod SQL Editor. Checked: same tables, columns, functions and grants as Staging, `drill_keys` gone, RLS on.
+- Prod deploy, smoke test (read only), then the golden path on Prod in three Chrome profiles: Ayu added Tari and Ratna, put in the note "Where Our Papers Are Kept" for all 3 (stamped), Tari and Ratna opened it, the thief opened 0 of 1. That house and note are the start of the demo data.
+- Fix: the Drill said "1 papers (0.0 MB)"; now "1 paper (7 KB)" (commit 29ced02). Both commits pushed; Production redeployed by hand.
+- CI: the first run of 29ced02 failed 4 tests because Laras put in a paper as Ayu on Staging while it ran (the tests expect Ayu's newest paper to be theirs); the re-run passed. Don't use the test accounts on Staging while GitHub Actions runs (2–3 min after a push).
+
+**How to deploy:** Vercel is not connected to GitHub yet, so pushes don't deploy. `vercel deploy --target preview --yes` (Staging, needs a Vercel login to open) · `vercel deploy --prod --yes` (the live site). Always pass `--target`.
+
+**Chrome profiles now (Claude in Chrome device ids):** Browser 3 `673ac17c` (main profile) = **Ayu** · Browser 2 `551c78cd` (was the Thief) = **Tari** · Browser 1 `89ad0dfb` (was Ayu) = **Ratna**. All three restored on the live site by Laras (she types the words; Claude may not type secret words on a non-localhost site). The old Ratna profile `910a9efd` isn't connected.
+
+**What's left:** the 10 steps in `internal/SUBMISSION-PREP.md` (Laras, 28 Nov: the list lives there, not here). Read it next, then continue with the first step not ticked.

@@ -66,7 +66,8 @@ const ROW = "flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white/6 p
 
 const MemberName = ({ m, me }: { m: Member; me: string }) =>
   // wide screens: a fixed column, so every row's address lines up. At most 10 characters, then "…"; the whole name on hover.
-  <span className="whitespace-nowrap font-medium sm:w-36 sm:shrink-0" title={m.name}>{shortName(m.name)}{m.address === me && <span className="font-normal text-muted"> (You)</span>}</span>;
+  // phones: it fills the first line, so the address always starts the next one.
+  <span className="whitespace-nowrap font-medium max-md:min-w-[calc(100%-6rem)] max-md:flex-1 md:w-36 md:shrink-0" title={m.name}>{shortName(m.name)}{m.address === me && <span className="font-normal text-muted"> (You)</span>}</span>;
 
 /** One row per paper: its title, who put it in, when, how many can open it, and whether it is stamped (U11; the paper's page checks the stamp).
  *  The House and the Papers page share it. */
@@ -151,15 +152,16 @@ export default function HouseView({ view, remove, recoverySaved }: { view: "home
           {!house ? <><Skeleton /><Skeleton /></> : <>
             <ul className="flex flex-col gap-2">
               {members!.map((m) => (
-                <li key={m.address} className={`${ROW} sm:flex-nowrap`}>{/* wide screens: one line, so the badges stay in one column */}
+                <li key={m.address} className={`${ROW} md:flex-nowrap`}>{/* wide screens: one line, so the badges stay in one column */}
                   <UserRound className="size-5 shrink-0 text-muted" aria-hidden />
                   <MemberName m={m} me={house.me} />
-                  <AddressChip address={m.address} copy />
-                  <span className="flex flex-wrap items-center gap-2 sm:shrink-0">
-                    <PadlockBadge address={m.address} round={round} />
+                  <span className="max-md:order-2"><AddressChip address={m.address} copy /></span>
+                  {/* phones: Remove sits on the name's line, on the right; the address and the badge go below. Every row looks the same. */}
+                  <span className="flex flex-wrap items-center gap-2 max-md:contents md:shrink-0">
+                    <span className="max-md:order-2"><PadlockBadge address={m.address} round={round} /></span>
                     {m.address !== house.me
-                      ? <Button variant="ghost" href={`/members?remove=${m.address}`} className="min-h-9! px-3!" aria-label={`Remove ${m.name}`} title={`Remove ${m.name}`}><UserMinus className="size-4" aria-hidden /></Button>
-                      : !alone && <span aria-hidden className="invisible max-sm:hidden"><Button variant="ghost" className="min-h-9! px-3!" tabIndex={-1}><UserMinus className="size-4" /></Button></span>}{/* keeps the badges in one column with the others' Remove; alone, nothing to line up with */}
+                      ? <Button variant="ghost" href={`/members?remove=${m.address}`} className="min-h-9! px-3! max-md:order-1" aria-label={`Remove ${m.name}`} title={`Remove ${m.name}`}><UserMinus className="size-4" aria-hidden /></Button>
+                      : !alone && <span aria-hidden className="invisible max-md:hidden"><Button variant="ghost" className="min-h-9! px-3!" tabIndex={-1}><UserMinus className="size-4" /></Button></span>}{/* keeps the badges in one column with the others' Remove; alone, nothing to line up with */}
                   </span>
                 </li>
               ))}
