@@ -1,0 +1,14 @@
+# Same as .gitignore: Vercel does not read .gitignore
+HACKATHON-WORKFLOW-*
+DESIGN-REFERENCE-*
+internal/
+.env*
+!.env.example
+node_modules/
+.next/
+.vercel/
+next-env.d.ts
+*.tsbuildinfo
+# P3 design samples: never committed (Laras, 23 Nov)
+public/samples/
+app/samples/
