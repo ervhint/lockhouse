@@ -8,8 +8,35 @@ Lockhouse is a house for your family's important papers. Everything you put in i
 
 Built for QoreChain's **Build Before Q-Day** hackathon (Encrypted Apps). It runs on QoreChain's test network (`qorechain-diana`), never mainnet.
 
-- Live demo: _added at deploy_
+- **Live demo: https://lockhouse-qorechain.vercel.app** (QoreChain testnet)
 - Demo video: _added at submission_
+
+## Try it
+
+**In one minute, no account:** open the [live demo](https://lockhouse-qorechain.vercel.app) and press **Play the Thief**. You break in, steal every locked copy and try to open them. Then Q-Day comes, and they still don't open.
+
+**The whole thing (about 10 minutes):** you need two people, so use two browser profiles (or two devices). Each profile is one person, and both do steps 1 to 3.
+
+1. Press **Make Your Keys**. Write down the 24 secret words.
+2. Get free test QOR at the [faucet](https://dashboard.qorechain.io/faucet) (it asks you to sign in there). Test QOR is play money for the test network; it pays the small network fees.
+3. Press **Register My Padlock**. This puts your public padlock on the test chain (two small transactions). The page then shows your `qor1` address.
+4. Sign in. In the first profile, press **Add Someone** and paste the second person's `qor1` address.
+5. Press **Put In a Paper**, pick a file or write a note, and tick the second person.
+6. In the second profile, open it. You see "Signature Checked on QoreChain" and "Stamped on QoreChain · {date}".
+
+To look at a stamp yourself, press its link: the explorer opens on Mainnet, so switch it to **Testnet** at the top.
+
+## Testnet addresses
+
+The three accounts in the demo video. Each one registered its padlock and signing key on `qorechain-diana`. Accounts 1 and 2 also stamped papers there (each stamp is a transaction with the memo `lockhouse-stamp-v1|…`).
+
+| Account | Address |
+| --- | --- |
+| Demo account 1 | `qor1w0c3th6k7gu3ptylnz6ngv2lskw6vaa29s60ha` |
+| Demo account 2 | `qor17dpfdmax8fkvjl8w9ap6hhjmcuc9eldc02zgmh` |
+| Demo account 3 | `qor1wyhu6v6r847t29l2ag3yef5r3e4fwxpw9pkntk` |
+
+Look them up at [explore.qore.network](https://explore.qore.network) (switch to Testnet first).
 
 ## The problem
 
@@ -112,9 +139,25 @@ Checked on 24 Nov 2026 with Claude Code (`/code-review` and a manual pass over e
 
 ## Credits
 
-- QoreChain's `@qorechain/qoreseal` and `@qorechain/qoresign` kits, and their testnet examples: transactions are built the same way.
+**QoreChain**
+- [`@qorechain/qoreseal`](https://www.npmjs.com/package/@qorechain/qoreseal) 0.1.0 and [`@qorechain/qoresign`](https://www.npmjs.com/package/@qorechain/qoresign) 0.2.0 (Apache-2.0), and their testnet examples: transactions are built the same way.
 - The Workshop 3 example in [qorechain/build-before-qday](https://github.com/qorechain/build-before-qday) (`workshop-3/01-qoreseal`, Apache-2.0): seal, open, the thief who can't, two readers.
-<!-- TODO Laras: where the house pictures in public/img/house came from -->
+- The `qorechain-diana` testnet, its faucet and the [explorer](https://explore.qore.network).
+
+**Libraries** (all open source)
+- [Next.js](https://nextjs.org) 16 and [React](https://react.dev) 19 (MIT)
+- [Tailwind CSS](https://tailwindcss.com) 4 (MIT)
+- [supabase-js](https://github.com/supabase/supabase-js) (MIT), on [Supabase](https://supabase.com) Postgres
+- [CosmJS](https://github.com/cosmos/cosmjs) `@cosmjs/proto-signing`, `@cosmjs/amino` and [`cosmjs-types`](https://github.com/confio/cosmjs-types) (Apache-2.0)
+- [`@scure/bip39`](https://github.com/paulmillr/scure-bip39) (MIT): the 24 secret words
+- [Lucide](https://lucide.dev) icons (ISC)
+- [Vitest](https://vitest.dev) (MIT) and [dotenv](https://github.com/motdotla/dotenv) (BSD-2-Clause), for tests only
+
+**Look**
+- Font: [Instrument Sans](https://fonts.google.com/specimen/Instrument+Sans) (Google Fonts, SIL Open Font License).
+- The Welcome screen (the house in the fog, Today / After Q-Day) follows the "Lumen Roof" design prompt. Its six house pictures in `public/img/house/` come from that prompt (images.higgs.ai), free to use.
+
+Hosted on [Vercel](https://vercel.com).
 
 ## Team
 
