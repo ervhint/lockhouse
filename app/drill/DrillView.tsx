@@ -8,7 +8,8 @@ import Badge from "@/components/Badge";
 import { CHAIN_ID, ITEM_PURPOSE } from "@/lib/settings";
 
 type Copy = { id: string; envelope: string; date: string };
-const mb = (n: number) => `${(n / 1024 ** 2).toFixed(1)} MB`;
+const bytes = (n: number) => n < 1024 ** 2 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 ** 2).toFixed(1)} MB`;
+const papers = (n: number) => `${n} ${n === 1 ? "paper" : "papers"}`;
 
 // S-09: the Thief's three steps, all real except the broken old lock (AC-7.3, D-19):
 // 1 steal every stored copy (this page downloads them), 2 try to open each with the Thief's own keys (QoreSeal open),
@@ -69,7 +70,7 @@ export default function DrillView() {
         {step < 1
           ? <><p className="text-muted">Lockhouse&apos;s server holds every family&apos;s papers. Get in and take them all.</p>
               <Button onClick={steal} loading={busy} full>{busy ? "Stealing" : "Break In and Steal Everything"}</Button></>
-          : <p>You broke into Lockhouse&apos;s server and stole every paper stored there, from every house: <b className="font-medium">{copies.length} papers</b> ({mb(size)}). If your house has papers, yours are in this pile too.</p>}
+          : <p>You broke into Lockhouse&apos;s server and stole every paper stored there, from every house: <b className="font-medium">{papers(copies.length)}</b> ({bytes(size)}). If your house has papers, yours are in this pile too.</p>}
         {problem && <p role="alert" className="text-danger">{problem}</p>}
       </Panel>
 
@@ -96,9 +97,9 @@ export default function DrillView() {
             : <>
                 <ul className="flex flex-col gap-2">
                   <Row ok={false}>Old lock (X25519): broken by your quantum computer <span className="text-sm text-muted">(Simulation)</span></Row>
-                  <Row ok>ML-KEM-1024: still holds on {withMlkem} of {copies.length} papers</Row>
+                  <Row ok>ML-KEM-1024: still holds on {withMlkem} of {papers(copies.length)}</Row>
                 </ul>
-                <p className="text-xl font-medium">You stole {copies.length} papers. You opened {copies.length - withMlkem}.</p>
+                <p className="text-xl font-medium">You stole {papers(copies.length)}. You opened {copies.length - withMlkem}.</p>
                 <p className="text-muted">Apps that use only the old lock would open here. Lockhouse locks every paper with ML-KEM-1024 too, and a quantum computer can&apos;t break it.</p>
               </>}
         </Panel>
